@@ -70,22 +70,9 @@ module WVR (
                 
 
                 3'b010: begin     // Load all 16 registers with 512 bits of D
-                    wvr_memory_bank[0]  <= D[31:0];
-                    wvr_memory_bank[1]  <= D[63:32];
-                    wvr_memory_bank[2]  <= D[95:64];
-                    wvr_memory_bank[3]  <= D[127:96];
-                    wvr_memory_bank[4]  <= D[159:128];
-                    wvr_memory_bank[5]  <= D[191:160];
-                    wvr_memory_bank[6]  <= D[223:192];
-                    wvr_memory_bank[7]  <= D[255:224];
-                    wvr_memory_bank[8]  <= D[287:256];
-                    wvr_memory_bank[9]  <= D[319:288];
-                    wvr_memory_bank[10] <= D[351:320];
-                    wvr_memory_bank[11] <= D[383:352];
-                    wvr_memory_bank[12] <= D[415:384];
-                    wvr_memory_bank[13] <= D[447:416];
-                    wvr_memory_bank[14] <= D[479:448];
-                    wvr_memory_bank[15] <= D[511:480];
+                     for (i = 0; i < 16; i = i + 1) begin
+                        wvr_memory_bank[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
+                    end
                 end
                 
 
@@ -95,7 +82,9 @@ module WVR (
 
              endcase
             
-            // !!Updating status for the sake of monitoring
+            
+        end
+// !!Updating status for the sake of monitoring
             wvr_out_r1  <= wvr_memory_bank[0];
             wvr_out_r2  <= wvr_memory_bank[1];
             wvr_out_r3  <= wvr_memory_bank[2];
@@ -112,7 +101,6 @@ module WVR (
             wvr_out_r14 <= wvr_memory_bank[13];
             wvr_out_r15 <= wvr_memory_bank[14];
             wvr_out_r16 <= wvr_memory_bank[15];
-        end
     end
 
 endmodule
@@ -120,7 +108,6 @@ endmodule
 module SVR (
     input wire clk,                  // Clock signal
     input wire reset,                // Reset signal
-
     input wire [7:0] A,         
     input wire [511:0] D,               
 
@@ -188,22 +175,9 @@ module SVR (
                 
 
                 3'b010: begin 
-                    svr_memory_bank[0]  <= D[31:0];
-                    svr_memory_bank[1]  <= D[63:32];
-                    svr_memory_bank[2]  <= D[95:64];
-                    svr_memory_bank[3]  <= D[127:96];
-                    svr_memory_bank[4]  <= D[159:128];
-                    svr_memory_bank[5]  <= D[191:160];
-                    svr_memory_bank[6]  <= D[223:192];
-                    svr_memory_bank[7]  <= D[255:224];
-                    svr_memory_bank[8]  <= D[287:256];
-                    svr_memory_bank[9]  <= D[319:288];
-                    svr_memory_bank[10] <= D[351:320];
-                    svr_memory_bank[11] <= D[383:352];
-                    svr_memory_bank[12] <= D[415:384];
-                    svr_memory_bank[13] <= D[447:416];
-                    svr_memory_bank[14] <= D[479:448];
-                    svr_memory_bank[15] <= D[511:480];
+                    for (i = 0; i < 16; i = i + 1) begin
+                        svr_memory_bank[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
+                    end
                 end
                 
 
@@ -213,6 +187,8 @@ module SVR (
 
              endcase
             
+            
+        end
             // !!Updating status for the sake of monitoring
             svr_out_r1  <= svr_memory_bank[0];
             svr_out_r2  <= svr_memory_bank[1];
@@ -230,11 +206,75 @@ module SVR (
             svr_out_r14 <= svr_memory_bank[13];
             svr_out_r15 <= svr_memory_bank[14];
             svr_out_r16 <= svr_memory_bank[15];
-        end
     end
 
 endmodule
 
+
+//these are gprs of which used in to hold values of neuron state along with thersold voltage and refratory period 
+
+module GPRs (
+    input wire clk,                       // Clock signal
+    input wire reset,                     // Reset signal
+    input wire [7:0] A,                   // Address input (register index selector)
+    input wire [511:0] D,                 // Data input for parameter loading
+
+    // Individual Output Signals for Monitoring
+    output reg [31:0] rpr_out_0,          // RPR: Output for shared refractory period
+    output reg [31:0] vtr_out_0,          // VTR: Output for shared voltage threshold
+    output reg [31:0] ntr_out_0,          // NTR: Output for register 0
+    output reg [31:0] ntr_out_1,          // NTR: Output for register 1
+    output reg [31:0] ntr_out_2,          // NTR: Output for register 2
+    output reg [31:0] ntr_out_3           // NTR: Output for register 3
+);
+
+    // Internal Registers
+    reg [31:0] rpr;                       // Shared Refractory Period Register (32 bits)
+    reg [31:0] vtr;                       // Shared Voltage Threshold Register (32 bits)
+    reg [31:0] ntr [0:3];                 // Neuron Type Registers (4x32 bits)
+
+    integer i;
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            // Reset all registers
+            rpr <= 32'b0;
+            vtr <= 32'b0;
+            for (i = 0; i < 4; i = i + 1) begin
+                ntr[i] <= 32'b0;
+            end
+        end else begin
+            case (A[7:5])
+                3'b000: begin // Load shared refractory period (RPR) register
+                    rpr <= D[31:0];
+                end
+
+                3'b001: begin // Load shared voltage threshold (VTR) register
+                    vtr <= D[31:0];
+                end
+
+                3'b010: begin // Load neuron types into NTR registers
+                    for (i = 0; i < 4; i = i + 1) begin
+                        ntr[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
+                    end
+                end
+
+                default: begin
+                    // No operation for unsupported funct values
+                end
+            endcase
+		
+      
+       end
+		rpr_out_0 = rpr;
+		vtr_out_0 = vtr;
+		ntr_out_0 = ntr[0];
+		ntr_out_1 = ntr[1];
+		ntr_out_2 = ntr[2];
+		ntr_out_3 = ntr[3];
+    end
+
+endmodule
 
 
 module VLSU (
