@@ -19,7 +19,7 @@ module WVR (
     input wire [7:0] A, //first 5 bits are rd/rs, last 3 are opcode
     input wire [511:0] D,
 
-    output wire [511: 0] W,
+    output reg [511: 0] W,
 
     //Output registers for the sake of monitoring
     output reg [31:0] wvr_out_r1,   
@@ -84,13 +84,13 @@ module WVR (
                 end
 
                 3'b010: begin   // Load all 16 registers with 512 bits of D
-                     for (i = 0; i < 16; i = i + 1) begin
+                    for (i = 0; i < 16; i = i + 1) begin
                         wvr_memory_bank[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
                     end
                 end
 
                 3'b011: begin //convh/doth, 32 weights on to first 128 lines of the bus, using as source
-                    W[31:0]   <= wvr_memory_bank[A[4:0] % 16];
+                    W[31:0]  <= wvr_memory_bank[A[4:0] % 16];
                     W[63:32] <= wvr_memory_bank[(A[4:0]+1) % 16];
                     W[95:64] <= wvr_memory_bank[(A[4:0]+2) % 16] ;
                     W[127:96] <= wvr_memory_bank[(A[4:0]+3) % 16];
@@ -107,7 +107,7 @@ module WVR (
                     // No operation for other funct values
                 end
 
-             endcase
+            endcase
             
             
         end
@@ -141,7 +141,7 @@ module SVR (
     input wire [7:0] A,         
     input wire [511:0] D,               
 
-    output wire [511: 0] S,
+    output reg [511: 0] S,
 
     //Output registers for the sake of monitoring
     output reg [31:0] svr_out_r1,   
@@ -214,7 +214,7 @@ module SVR (
             end
             
             3'b011: begin //convh/doth, 32 spikes onto first 32 lines of the bus
-                S[31:0]   <= svr_memory_bank[A[4:0] % 16];
+                S[31:0]  <= svr_memory_bank[A[4:0] % 16];
             end
 
             3'b100: begin //conva/dota is only 128 spikes which is 4 registers
@@ -287,9 +287,7 @@ module NSR (
     output reg [31:0] nsr_out_r16,
     
     //need a wire to output current
-    output wire [512:0] Cur
-
-
+    output reg [511:0] Cur
 );
 
     // Internal Registers
@@ -305,6 +303,8 @@ module NSR (
             // Reset all registers
             rpr <= 32'b0;
             vtr <= 32'b0;
+            Cur <= 512'b0;
+
             for (i = 0; i < 4; i = i + 1) begin
                 ntr[i] <= 32'b0;
             end
@@ -329,6 +329,7 @@ module NSR (
             nsr_out_r14 <= 32'b0;
             nsr_out_r15 <= 32'b0;
             nsr_out_r16 <= 32'b0;
+
 
     end 
         else begin
@@ -365,14 +366,14 @@ module NSR (
                 // No operation for unsupported funct values
             end
             endcase  
-       end
+    end
 
-		rpr_out_0 = rpr;
-		vtr_out_0 = vtr;
-		ntr_out_0 = ntr[0];
-		ntr_out_1 = ntr[1];
-		ntr_out_2 = ntr[2];
-		ntr_out_3 = ntr[3];
+        rpr_out_0 = rpr;
+        vtr_out_0 = vtr;
+        ntr_out_0 = ntr[0];
+        ntr_out_1 = ntr[1];
+        ntr_out_2 = ntr[2];
+        ntr_out_3 = ntr[3];
 
         nsr_out_r1  <= current_registers[0];
         nsr_out_r2  <= current_registers[1];
@@ -402,27 +403,21 @@ module SAcc (
     input wire clk,
     input wire reset,
 
-    output wire [511:0] Cur_Output
+    output reg [511:0] Cur_Output
 );
     integer i;
 
-    always @(posedge clk or posedge reset) begin
+    always @(posedge clk or posedge reset) begin //reset the output wires/reg
         if (reset) begin
-            S <= 128'b0; //max we use is 128 neurons 1 bit each spike
-            W <= 512'b0; //
-            Cur_Input <= 512'b0;
             Cur_Output <= 512'b0;
         end
         else begin
             //do automatically -
-            reg [511:0] temp; 
-            for (i = 0; i < 128; i++) begin
+            for (i = 0; i < 128; i = i + 1) begin
                 //take first bit and do and with all weights
                 //then add up with all the currents
-                temp[i * 4 +: 4] = S[i] && W[i * 4 +: 4]; //and operation between 1 neuron's synapse (1bits) and 1 neuron's weights  (4bits)
-                temp[i * 4 +: 4] += Cur_Input[i * 4 +: 4];
+                Cur_Output[i * 4 +: 4] <= (S[i] & W[i * 4 +: 4]) + Cur_Input[i * 4 +: 4]; //and operation between 1 neuron's synapse (1bits) and 1 neuron's weights  (4bits)
             end
-            Cur_Output = temp;
         end
     end
 endmodule

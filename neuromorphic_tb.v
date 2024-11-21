@@ -9,8 +9,9 @@ module testbench();
     wire [511:0] vector; //once updated, will be passed to wvr/svr
     wire [511:0] S;
     wire [511:0] W;
-    wire [511:0] Cur1;
-    wire [511:0] Cur2;
+    wire [511:0] Cur1; //Current Input
+    wire [511:0] Cur2; //Current Output - Synapse Accumulation
+    
 
     // Output wires
     //wvr
@@ -126,11 +127,13 @@ module testbench();
         .svr_out_r16(svr_out_r16)
     );
    
-   NSR nsr(
+    NSR nsr(
         .clk(clk),
         .reset(reset),
-        .A(DG),
-        .D(vector),     
+        .A(DA),
+        .D(vector),  
+        .Cur(Cur1),
+   
                         //vector goes as D signal into GPRs module
         .rpr_out_0(rpr_out_0),          // RPR: Output for shared refractory period
         .vtr_out_0(vtr_out_0),          // VTR: Output for shared voltage threshold
@@ -155,6 +158,7 @@ module testbench();
         .nsr_out_r14(nsr_out_r14),
         .nsr_out_r15(nsr_out_r15),
         .nsr_out_r16(nsr_out_r16)
+
 );
 
 
@@ -178,7 +182,7 @@ module testbench();
         if (reset)begin
             DC = 8'bxxxxxxxx;
             DB = 8'bxxxxxxxx;
-            DG = 8'bxxxxxxxx;
+            DA = 8'bxxxxxxxx;
             rdata=512'b0;
         end
     end
@@ -238,27 +242,29 @@ module testbench();
         //Simulating computation and neuron storing for doth
         //WVR Load, SVR Load, NSR Store
         DC = 8'b01000001;
-        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
-        #50;
-        
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+        #50
+
         DB = 8'b01000001;
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
         #50;
 
+
         DC = 8'b01100010;
         DB = 8'b01100010;
-        DA = 8'b01100000;
-        #50;
-        reset = 1;
-        #30
-        reset = 0;
+        #100;
+        rdata = Cur2; //taking the output from Syanpse Wise accumulator and sending as data
+        //Can do this because SVR WVR are not storing
+        DA = 8'b01100000; 
+        #100;
+        
 
         $finish;
     end
 
     initial begin
-        $monitor("\nTime = %0d |DA = %b| DB = %b | DC = %b |rdata = %h|GPRs Outputs =%h %h %h %h %h %h  | WVR Outputs = %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h | SVR Outputs = %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h | NSR Current Registers = %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h", 
-                  $time,DA, DB, DC, rdata,rpr_out_0,vtr_out_0,ntr_out_0,ntr_out_1,ntr_out_2,ntr_out_3,
+        $monitor("\nTime = %0d |DA = %b| DB = %b | DC = %b |rdata = %h|Cur1 = %h| Cur2 = %h| Cur3 = 0 |NSR Other Registers =%h %h %h %h %h %h  | WVR Outputs = %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h | SVR Outputs = %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h | NSR Current Registers = %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h %h", 
+                  $time,DA, DB, DC, rdata,Cur1, Cur2, rpr_out_0,vtr_out_0,ntr_out_0,ntr_out_1,ntr_out_2,ntr_out_3,
                   wvr_out_r1, wvr_out_r2, wvr_out_r3, wvr_out_r4, wvr_out_r5, wvr_out_r6, wvr_out_r7, wvr_out_r8, wvr_out_r9, wvr_out_r10, wvr_out_r11, wvr_out_r12, wvr_out_r13, wvr_out_r14, wvr_out_r15, wvr_out_r16,
                   svr_out_r1, svr_out_r2, svr_out_r3, svr_out_r4, svr_out_r5, svr_out_r6, svr_out_r7, svr_out_r8, svr_out_r9, svr_out_r10, svr_out_r11, svr_out_r12, svr_out_r13, svr_out_r14, svr_out_r15, svr_out_r16,
                   nsr_out_r1, nsr_out_r2, nsr_out_r3, nsr_out_r4, nsr_out_r5, nsr_out_r6, nsr_out_r7, nsr_out_r8, nsr_out_r9, nsr_out_r10, nsr_out_r11, nsr_out_r12, nsr_out_r13, nsr_out_r14, nsr_out_r15, nsr_out_r16);
