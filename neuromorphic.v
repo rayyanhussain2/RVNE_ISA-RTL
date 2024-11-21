@@ -1,10 +1,25 @@
+module VLSU (
+    input wire [511:0] rdata,        // Input data to the VLSU
+    input wire clk,                  // Clock signal
+    output reg [511:0] vector        // Output vector data
+);
+
+    always @(posedge clk) begin
+        vector <= rdata;             // Pass the input data directly to the output vector
+    end
+
+endmodule
+
+//1 Weight = 4 bits
+//8 / 32 / 128
 module WVR (
     input wire clk,                  // Clock signal
     input wire reset,                // Reset signal
 
-    input wire [7:0] A,
-         
-    input wire [511:0] D,  
+    input wire [7:0] A, //first 5 bits are rd/rs, last 3 are opcode
+    input wire [511:0] D,
+
+    output wire [511: 0] W  
 
     //Output registers for the sake of monitoring
     output reg [31:0] wvr_out_r1,   
@@ -35,7 +50,9 @@ module WVR (
             for (i = 0; i < 16; i = i + 1) begin
                 wvr_memory_bank[i] <= 32'b0;
             end
-
+            
+            W <= 512'b0;
+            
             wvr_out_r1  <= 32'b0;
             wvr_out_r2  <= 32'b0;
             wvr_out_r3  <= 32'b0;
@@ -54,7 +71,6 @@ module WVR (
             wvr_out_r16 <= 32'b0;
         end
         else begin
-
             case (A[7:5])
                 3'b000: begin     // Load only the first 32 bits of D into one register
                     wvr_memory_bank[A[4:0]] <= D[31:0];
@@ -69,9 +85,22 @@ module WVR (
                 end
                 
 
-                3'b010: begin     // Load all 16 registers with 512 bits of D
+                3'b010: begin   // Load all 16 registers with 512 bits of D
                      for (i = 0; i < 16; i = i + 1) begin
                         wvr_memory_bank[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
+                    end
+                end
+
+                3'b011: begin //convh, 32 weights on to first 128 lines of the bus
+                    W[31:0]   <= wvr_memory_bank[A[4:0] % 16];
+                    W[63:32] <= wvr_memory_bank[(A[4:0]+1) % 16];
+                    W[95:64] <= wvr_memory_bank[(A[4:0]+2) % 16] ;
+                    W[127:96] <= wvr_memory_bank[(A[4:0]+3) % 16];
+                end
+
+                3'b100: begin //conva
+                    for (i = 0; i < 16; i = i + 1) begin
+                        W[i * 32 +: 32] <= wvr_memory_bank[i]; // Extract 32 bits for each NTR register
                     end
                 end
                 
@@ -105,11 +134,16 @@ module WVR (
 
 endmodule
 
+//1 weight = 1 bit
+//32 / 128 / 512
 module SVR (
     input wire clk,                  // Clock signal
-    input wire reset,                // Reset signal
+    input wire reset,                   // Reset signal
+    
     input wire [7:0] A,         
     input wire [511:0] D,               
+
+    output wire [511: 0] S,
 
     //Output registers for the sake of monitoring
     output reg [31:0] svr_out_r1,   
@@ -141,6 +175,8 @@ module SVR (
                 svr_memory_bank[i] <= 32'b0;
             end
 
+            S <= 512'b0;
+
             svr_out_r1  <= 32'b0;
             svr_out_r2  <= 32'b0;
             svr_out_r3  <= 32'b0;
@@ -158,34 +194,45 @@ module SVR (
             svr_out_r15 <= 32'b0;
             svr_out_r16 <= 32'b0;
         end
+
         else begin
+        case (A[7:5])
+            3'b000: begin     // Load only the first 32 bits of D into one register
+                svr_memory_bank[A[4:0]] <= D[31:0];
+            end
+            
 
-            case (A[7:5])
-                3'b000: begin     // Load only the first 32 bits of D into one register
-                    svr_memory_bank[A[4:0]] <= D[31:0];
+            3'b001: begin     // Load 128 bits into 4 consecutive registers
+                svr_memory_bank[A[4:0] % 16]   <= D[31:0];
+                svr_memory_bank[(A[4:0]+1) % 16] <= D[63:32];
+                svr_memory_bank[(A[4:0]+2) % 16] <= D[95:64];
+                svr_memory_bank[(A[4:0]+3) % 16] <= D[127:96];
+            
+            end
+            
+
+            3'b010: begin 
+                for (i = 0; i < 16; i = i + 1) begin
+                    svr_memory_bank[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
                 end
-                
+            end
+            
+            3'b011: begin //convh, 32 spikes onto first 32 lines of the bus
+                S[31:0]   <= svr_memory_bank[A[4:0] % 16];
+            end
 
-                3'b001: begin     // Load 128 bits into 4 consecutive registers
-                    svr_memory_bank[A[4:0] % 16]   <= D[31:0];
-                    svr_memory_bank[(A[4:0]+1) % 16] <= D[63:32];
-                    svr_memory_bank[(A[4:0]+2) % 16] <= D[95:64];
-                    svr_memory_bank[(A[4:0]+3) % 16] <= D[127:96];
-                end
-                
+            3'b100: begin //conva is only 128 spikes which is 4 registers
+                S[31:0]   <= svr_memory_bank[A[4:0] % 16];
+                S[63:32] <= svr_memory_bank[(A[4:0]+1) % 16];
+                S[95:64] <= svr_memory_bank[(A[4:0]+2) % 16] ;
+                S[127:96] <= svr_memory_bank[(A[4:0]+3) % 16];
+            end
 
-                3'b010: begin 
-                    for (i = 0; i < 16; i = i + 1) begin
-                        svr_memory_bank[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
-                    end
-                end
-                
+            default: begin
+                // No operation for other funct values
+            end
 
-                default: begin
-                    // No operation for other funct values
-                end
-
-             endcase
+            endcase
             
             
         end
@@ -212,11 +259,10 @@ endmodule
 
 
 //these are gprs of which used in to hold values of neuron state along with thersold voltage and refratory period 
-
-module GPRs (
+module NSR (
     input wire clk,                       // Clock signal
     input wire reset,                     // Reset signal
-    input wire [7:0] A,                   // Address input (register index selector)
+    input wire [7:0] A,                   // Address input (register index selector) and opcode
     input wire [511:0] D,                 // Data input for parameter loading
 
     // Individual Output Signals for Monitoring
@@ -226,6 +272,10 @@ module GPRs (
     output reg [31:0] ntr_out_1,          // NTR: Output for register 1
     output reg [31:0] ntr_out_2,          // NTR: Output for register 2
     output reg [31:0] ntr_out_3           // NTR: Output for register 3
+    
+    //need a wire
+
+
 );
 
     // Internal Registers
@@ -276,15 +326,26 @@ module GPRs (
 
 endmodule
 
+module NAcc (
+    input wire [511:0] S, // 32 or 128 spikes ()
+    input wire [511:0] W, //32 or 128 weights
+    input wire [] Cur,
 
-module VLSU (
-    input wire [511:0] rdata,        // Input data to the VLSU
-    input wire clk,                  // Clock signal
-    output reg [511:0] vector        // Output vector data
+    input wire clk,
+    input wire reset,
+
+    output wire [] Cur,
+
+    //need output current registers
+    output reg [] Cur
 );
 
-    always @(posedge clk) begin
-        vector <= rdata;             // Pass the input data directly to the output vector
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            
+        end
     end
 
 endmodule
+
+

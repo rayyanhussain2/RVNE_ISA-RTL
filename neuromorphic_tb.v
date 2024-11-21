@@ -173,7 +173,7 @@ module testbench();
 
 
         //GPRs
-        DG= 8'b00000000; //A = funct (3 bits) + rd (5 bits)
+        DG = 8'b00000000; //A = funct (3 bits) + rd (5 bits)
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
         #50;reset = 1; #30;reset = 0;
 
