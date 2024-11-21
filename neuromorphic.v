@@ -19,7 +19,7 @@ module WVR (
     input wire [7:0] A, //first 5 bits are rd/rs, last 3 are opcode
     input wire [511:0] D,
 
-    output wire [511: 0] W  
+    output wire [511: 0] W,
 
     //Output registers for the sake of monitoring
     output reg [31:0] wvr_out_r1,   
@@ -76,14 +76,12 @@ module WVR (
                     wvr_memory_bank[A[4:0]] <= D[31:0];
                 end
                 
-
                 3'b001: begin     // Load 128 bits into 4 consecutive registers
                     wvr_memory_bank[A[4:0] % 16]   <= D[31:0];
                     wvr_memory_bank[(A[4:0]+1) % 16] <= D[63:32];
                     wvr_memory_bank[(A[4:0]+2) % 16] <= D[95:64];
                     wvr_memory_bank[(A[4:0]+3) % 16] <= D[127:96];
                 end
-                
 
                 3'b010: begin   // Load all 16 registers with 512 bits of D
                      for (i = 0; i < 16; i = i + 1) begin
@@ -91,14 +89,14 @@ module WVR (
                     end
                 end
 
-                3'b011: begin //convh, 32 weights on to first 128 lines of the bus
+                3'b011: begin //convh/doth, 32 weights on to first 128 lines of the bus, using as source
                     W[31:0]   <= wvr_memory_bank[A[4:0] % 16];
                     W[63:32] <= wvr_memory_bank[(A[4:0]+1) % 16];
                     W[95:64] <= wvr_memory_bank[(A[4:0]+2) % 16] ;
                     W[127:96] <= wvr_memory_bank[(A[4:0]+3) % 16];
                 end
 
-                3'b100: begin //conva
+                3'b100: begin //conva/dota, using as source
                     for (i = 0; i < 16; i = i + 1) begin
                         W[i * 32 +: 32] <= wvr_memory_bank[i]; // Extract 32 bits for each NTR register
                     end
@@ -166,7 +164,6 @@ module SVR (
 
     
     reg [31:0] svr_memory_bank [0:15];  
-    
     integer i;
 
     always @(posedge clk or posedge reset) begin
@@ -200,7 +197,6 @@ module SVR (
             3'b000: begin     // Load only the first 32 bits of D into one register
                 svr_memory_bank[A[4:0]] <= D[31:0];
             end
-            
 
             3'b001: begin     // Load 128 bits into 4 consecutive registers
                 svr_memory_bank[A[4:0] % 16]   <= D[31:0];
@@ -217,11 +213,11 @@ module SVR (
                 end
             end
             
-            3'b011: begin //convh, 32 spikes onto first 32 lines of the bus
+            3'b011: begin //convh/doth, 32 spikes onto first 32 lines of the bus
                 S[31:0]   <= svr_memory_bank[A[4:0] % 16];
             end
 
-            3'b100: begin //conva is only 128 spikes which is 4 registers
+            3'b100: begin //conva/dota is only 128 spikes which is 4 registers
                 S[31:0]   <= svr_memory_bank[A[4:0] % 16];
                 S[63:32] <= svr_memory_bank[(A[4:0]+1) % 16];
                 S[95:64] <= svr_memory_bank[(A[4:0]+2) % 16] ;
@@ -271,9 +267,27 @@ module NSR (
     output reg [31:0] ntr_out_0,          // NTR: Output for register 0
     output reg [31:0] ntr_out_1,          // NTR: Output for register 1
     output reg [31:0] ntr_out_2,          // NTR: Output for register 2
-    output reg [31:0] ntr_out_3           // NTR: Output for register 3
+    output reg [31:0] ntr_out_3,           // NTR: Output for register 3
     
-    //need a wire
+    output reg [31:0] nsr_out_r1,
+    output reg [31:0] nsr_out_r2,
+    output reg [31:0] nsr_out_r3,
+    output reg [31:0] nsr_out_r4,
+    output reg [31:0] nsr_out_r5,
+    output reg [31:0] nsr_out_r6,
+    output reg [31:0] nsr_out_r7,
+    output reg [31:0] nsr_out_r8,
+    output reg [31:0] nsr_out_r9,
+    output reg [31:0] nsr_out_r10,
+    output reg [31:0] nsr_out_r11,
+    output reg [31:0] nsr_out_r12,
+    output reg [31:0] nsr_out_r13,
+    output reg [31:0] nsr_out_r14,
+    output reg [31:0] nsr_out_r15,
+    output reg [31:0] nsr_out_r16,
+    
+    //need a wire to output current
+    output wire [512:0] Cur
 
 
 );
@@ -282,6 +296,7 @@ module NSR (
     reg [31:0] rpr;                       // Shared Refractory Period Register (32 bits)
     reg [31:0] vtr;                       // Shared Voltage Threshold Register (32 bits)
     reg [31:0] ntr [0:3];                 // Neuron Type Registers (4x32 bits)
+    reg [31:0] current_registers [0:15];                 // NSR (10x32 bits)
 
     integer i;
 
@@ -293,59 +308,123 @@ module NSR (
             for (i = 0; i < 4; i = i + 1) begin
                 ntr[i] <= 32'b0;
             end
-        end else begin
-            case (A[7:5])
-                3'b000: begin // Load shared refractory period (RPR) register
-                    rpr <= D[31:0];
-                end
 
-                3'b001: begin // Load shared voltage threshold (VTR) register
-                    vtr <= D[31:0];
-                end
+            for (i = 0; i < 16; i = i + 1) begin
+                current_registers[i] <= 32'b0;
+            end
 
-                3'b010: begin // Load neuron types into NTR registers
-                    for (i = 0; i < 4; i = i + 1) begin
-                        ntr[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
+            nsr_out_r1  <= 32'b0;
+            nsr_out_r2  <= 32'b0;
+            nsr_out_r3  <= 32'b0;
+            nsr_out_r4  <= 32'b0;
+            nsr_out_r5  <= 32'b0;
+            nsr_out_r6  <= 32'b0;
+            nsr_out_r7  <= 32'b0;
+            nsr_out_r8  <= 32'b0;
+            nsr_out_r9  <= 32'b0;
+            nsr_out_r10 <= 32'b0;
+            nsr_out_r11 <= 32'b0;
+            nsr_out_r12 <= 32'b0;
+            nsr_out_r13 <= 32'b0;
+            nsr_out_r14 <= 32'b0;
+            nsr_out_r15 <= 32'b0;
+            nsr_out_r16 <= 32'b0;
+
+    end 
+        else begin
+        case (A[7:5])
+            3'b000: begin // Load shared refractory period (RPR) register
+                rpr <= D[31:0];
+            end
+
+            3'b001: begin // Load shared voltage threshold (VTR) register
+                vtr <= D[31:0];
+            end
+
+            3'b010: begin // Load neuron types into NTR registers
+                for (i = 0; i < 4; i = i + 1) begin
+                    ntr[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
+                end
+            end
+
+            //more opcodes to store for convh
+            3'b011: begin //32 neurons storing indexed convh/doth
+                current_registers[A[4:0] % 16]   <= D[31:0];
+                current_registers[(A[4:0]+1) % 16] <= D[63:32];
+                current_registers[(A[4:0]+2) % 16] <= D[95:64];
+                current_registers[(A[4:0]+3) % 16] <= D[127:96];
+            end
+            
+            3'b100: begin //conva/dota, using as rd
+                    for (i = 0; i < 16; i = i + 1) begin
+                        current_registers[i] <= D[i  * 32 +: 32]; // extract current from 128 neurons (4 bits each) and store in current_registers
                     end
                 end
-
-                default: begin
-                    // No operation for unsupported funct values
-                end
-            endcase
-		
-      
+            
+            default: begin
+                // No operation for unsupported funct values
+            end
+            endcase  
        end
+
 		rpr_out_0 = rpr;
 		vtr_out_0 = vtr;
 		ntr_out_0 = ntr[0];
 		ntr_out_1 = ntr[1];
 		ntr_out_2 = ntr[2];
 		ntr_out_3 = ntr[3];
+
+        nsr_out_r1  <= current_registers[0];
+        nsr_out_r2  <= current_registers[1];
+        nsr_out_r3  <= current_registers[2];
+        nsr_out_r4  <= current_registers[3];
+        nsr_out_r5  <= current_registers[4];
+        nsr_out_r6  <= current_registers[5];
+        nsr_out_r7  <= current_registers[6];
+        nsr_out_r8  <= current_registers[7];
+        nsr_out_r9  <= current_registers[8];
+        nsr_out_r10 <= current_registers[9];
+        nsr_out_r11 <= current_registers[10];
+        nsr_out_r12 <= current_registers[11];
+        nsr_out_r13 <= current_registers[12];
+        nsr_out_r14 <= current_registers[13];
+        nsr_out_r15 <= current_registers[14];
+        nsr_out_r16 <= current_registers[15];
     end
 
 endmodule
 
-module NAcc (
+module SAcc (
     input wire [511:0] S, // 32 or 128 spikes ()
     input wire [511:0] W, //32 or 128 weights
-    input wire [] Cur,
+    input wire [511:0] Cur_Input,
 
     input wire clk,
     input wire reset,
 
-    output wire [] Cur,
-
-    //need output current registers
-    output reg [] Cur
+    output wire [511:0] Cur_Output
 );
+    integer i;
 
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            
+            S <= 128'b0; //max we use is 128 neurons 1 bit each spike
+            W <= 512'b0; //
+            Cur_Input <= 512'b0;
+            Cur_Output <= 512'b0;
+        end
+        else begin
+            //do automatically -
+            reg [511:0] temp; 
+            for (i = 0; i < 128; i++) begin
+                //take first bit and do and with all weights
+                //then add up with all the currents
+                temp[i * 4 +: 4] = S[i] && W[i * 4 +: 4]; //and operation between 1 neuron's synapse (1bits) and 1 neuron's weights  (4bits)
+                temp[i * 4 +: 4] += Cur_Input[i * 4 +: 4];
+            end
+            Cur_Output = temp;
         end
     end
-
 endmodule
 
 
