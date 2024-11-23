@@ -16,7 +16,7 @@ module WVR (
     input wire clk,                  // Clock signal
     input wire reset,                // Reset signal
 
-    input wire [7:0] A, //first 5 bits are rd/rs, last 3 are opcode
+    input wire [8:0] A, //first 5 bits are rd/rs, last 3 are opcode
     input wire [511:0] D,
 
     output reg [511: 0] W,
@@ -72,31 +72,31 @@ module WVR (
         end
         else begin
             case (A[7:5])
-                3'b000: begin     // Load only the first 32 bits of D into one register
+                4'b0000: begin     // Load only the first 32 bits of D into one register
                     wvr_memory_bank[A[4:0]] <= D[31:0];
                 end
                 
-                3'b001: begin     // Load 128 bits into 4 consecutive registers
+                4'b0001: begin     // Load 128 bits into 4 consecutive registers
                     wvr_memory_bank[A[4:0] % 16]   <= D[31:0];
                     wvr_memory_bank[(A[4:0]+1) % 16] <= D[63:32];
                     wvr_memory_bank[(A[4:0]+2) % 16] <= D[95:64];
                     wvr_memory_bank[(A[4:0]+3) % 16] <= D[127:96];
                 end
 
-                3'b010: begin   // Load all 16 registers with 512 bits of D
+                4'b0010: begin   // Load all 16 registers with 512 bits of D
                     for (i = 0; i < 16; i = i + 1) begin
                         wvr_memory_bank[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
                     end
                 end
 
-                3'b011: begin //convh/doth, 32 weights on to first 128 lines of the bus, using as source
+                4'b0011: begin //convh/doth, 32 weights on to first 128 lines of the bus, using as source
                     W[31:0]  <= wvr_memory_bank[A[4:0] % 16];
                     W[63:32] <= wvr_memory_bank[(A[4:0]+1) % 16];
                     W[95:64] <= wvr_memory_bank[(A[4:0]+2) % 16] ;
                     W[127:96] <= wvr_memory_bank[(A[4:0]+3) % 16];
                 end
 
-                3'b100: begin //conva/dota, using as source
+                4'b0100: begin //conva/dota, using as source
                     for (i = 0; i < 16; i = i + 1) begin
                         W[i * 32 +: 32] <= wvr_memory_bank[i]; // Extract 32 bits for each NTR register
                     end
@@ -138,7 +138,7 @@ module SVR (
     input wire clk,                  // Clock signal
     input wire reset,                   // Reset signal
     
-    input wire [7:0] A,         
+    input wire [8:0] A,         
     input wire [511:0] D,               
 
     output reg [511: 0] S,
@@ -194,11 +194,11 @@ module SVR (
 
         else begin
         case (A[7:5])
-            3'b000: begin     // Load only the first 32 bits of D into one register
+            4'b0000: begin     // Load only the first 32 bits of D into one register
                 svr_memory_bank[A[4:0]] <= D[31:0];
             end
 
-            3'b001: begin     // Load 128 bits into 4 consecutive registers
+            4'b0001: begin     // Load 128 bits into 4 consecutive registers
                 svr_memory_bank[A[4:0] % 16]   <= D[31:0];
                 svr_memory_bank[(A[4:0]+1) % 16] <= D[63:32];
                 svr_memory_bank[(A[4:0]+2) % 16] <= D[95:64];
@@ -207,17 +207,17 @@ module SVR (
             end
             
 
-            3'b010: begin 
+            4'b0010: begin 
                 for (i = 0; i < 16; i = i + 1) begin
                     svr_memory_bank[i] <= D[i * 32 +: 32]; // Extract 32 bits for each NTR register
                 end
             end
             
-            3'b011: begin //convh/doth, 32 spikes onto first 32 lines of the bus
+            4'b0011: begin //convh/doth, 32 spikes onto first 32 lines of the bus
                 S[31:0]  <= svr_memory_bank[A[4:0] % 16];
             end
 
-            3'b100: begin //conva/dota is only 128 spikes which is 4 registers
+            4'b0100: begin //conva/dota is only 128 spikes which is 4 registers
                 S[31:0]   <= svr_memory_bank[A[4:0] % 16];
                 S[63:32] <= svr_memory_bank[(A[4:0]+1) % 16];
                 S[95:64] <= svr_memory_bank[(A[4:0]+2) % 16] ;
@@ -358,7 +358,7 @@ module NSR (
                 Cur <= D;
             end
             
-            4'b0100: begin //conva/dota, using as rd
+            4'b0100: begin //dota, using as rd
                     for (i = 0; i < 16; i = i + 1) begin
                         current_registers[i] <= D[i  * 32 +: 32]; // extract current from 128 neurons (4 bits each) and store in current_registers
                     end
@@ -366,28 +366,30 @@ module NSR (
             end
             
             //all which are indirectly indexed by rd
+            //mainly for convh and conva
             4'b0101: begin //Storing one neuron not 32 or 128
                 current_registers[A[4 : 0]][4 : 0] <= D[4 : 0]; // extract current from 128 neurons (4 bits each) and store in current_registers
                 Cur <= D;
             end
 
             4'b0110: begin //storing for four neurons not 1 32 or 128: 32 bits which is one whole register
-                current_registers[A[4 : 0]] <= D[31:0];
+                current_registers[A[4 : 0]][15:0] <= D[15:0];
                 Cur <= D;
             end
 
-            4'b0111: begin //storing for 16 neurons, which is 2 registers
+            4'b0111: begin //storing for 16 neurons, which is 4 registers
                 current_registers[A[4 : 0]] <=  D[31 : 0];
                 current_registers[(A[4 : 0] + 1) % 16] <= D[63 : 32];
+
                 Cur <= D;
             end
 
-            4'b1000: begin //upds - all neurons in that one register - update it in the same register in ntr
+            4'b1000: begin //upds - all neurons in that one register - update it in the same register in ntr (8 neurons)
                 if (rpr == 32'h00000000) begin //if refactory period expires
-                    for (i = 0; i < 8; i++) begin
+                    for (i = 0; i < 8; i = i + 1) begin
                         temp = current_registers[A[4:0]][i * 4 +: 4]; //extract current from those bits
                         temp = temp * 0.04 + 0.01; //I * Resistance + Rest Potential * ()
-                        if (temp > 0) begin
+                        if (temp >= 0) begin
                             ntr[A[4:0]][i * 4 +: 4] = 4'b1111;
                         end
                     end
@@ -397,13 +399,13 @@ module NSR (
                 end
             end 
 
-            4'b1001: begin //upda - 4 registers constraint coz- update it in same register as ntr
+            4'b1001: begin //updg - 4 registers constraint coz- update it in same register as ntr (32 neurons)
                 if (rpr == 32'h00000000) begin //if refactory period expires
-                    for (j = 0; j < 4; j++) begin
-                        for (i = 0; i < 8; i++) begin
+                    for (j = 0; j < 4; j = j + 1) begin
+                        for (i = 0; i < 8; i = i + 1) begin
                             temp = current_registers[i][i * 4 +: 4]; //extract current from those bits
-                            temp = temp * 0.04 + 0.01; //I * Resistance + Rest Potential * ()
-                            if (temp > 0) begin
+                            temp = temp * 0.04 + 0.01; //I * Resistance + Rest Potential * (rest formula)
+                            if (temp >= 0) begin
                                 ntr[i][i * 4 +: 4] = 4'b1111;
                             end
                         end

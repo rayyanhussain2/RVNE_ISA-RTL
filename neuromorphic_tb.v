@@ -3,8 +3,8 @@ module testbench();
     reg clk;
     reg reset;
     reg [8:0] DA;
-    reg [7:0] DB;
-    reg [7:0] DC;
+    reg [8:0] DB;
+    reg [8:0] DC;
     reg [511:0] rdata; // will be passed to lsu
     wire [511:0] vector; //once updated, will be passed to wvr/svr
     wire [511:0] S;
@@ -211,7 +211,7 @@ module testbench();
     end
 
     initial begin
-        $dumpfile("test.vcd"); // Specifies the name of the VCD file to generate
+        $dumpfile("neuromorphic.vcd"); // Specifies the name of the VCD file to generate
         $dumpvars(0, testbench);
         
         //Resetting
@@ -220,73 +220,200 @@ module testbench();
         #10;
         reset = 0;
 
-        /*
-        //WVR Cases
-        DC = 8'b00000001; //A = funct (3 bits) + rd (5 bits)
+        //WVR Storing Instructions--------------------------------------------------
+        //lw.wv
+        DC = 9'b000000001; //A = funct (4 bits) + rd (5 bits)
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF11111234; // Test data
         #50;reset = 1; #30;reset = 0;
-
-        DC = 8'b00100011; //A = funct (3 bits) + rd (5 bits)
+        //lh.wv
+        DC = 9'b000100011; //A = funct (4 bits) + rd (5 bits)
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF11111111222222223333333344444444; // Test data
         #50;reset = 1; #30;reset = 0;
-
-        DC = 8'b01000001;
+        //la.wv
+        DC = 9'b001000001;
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
         #50;reset = 1; #30;reset = 0;
 
-        //SVR   
-        DB = 8'b00000001; //A = funct (3 bits) + rd (5 bits)
+        //SVR Storing Instructions--------------------------------------------------
+        //lw.sv
+        DB = 9'b000000001; //A = funct (4 bits) + rd (5 bits)
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
+        #50;reset = 1; #30;reset = 0;
+        //lh.sv
+        DB = 9'b000100001; //A = funct (4 bits) + rd (5 bits)
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
+        #50;reset = 1; #30;reset = 0;
+        //la.sv
+        DB = 9'b001000001;
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
         #50;reset = 1; #30;reset = 0;
 
-        DB = 8'b00100001; //A = funct (3 bits) + rd (5 bits)
+        //NSR Storing Instructions--------------------------------------------------
+        //lw.rp
+        DA = 9'b000000000; //A = funct (4 bits) + rd (5 bits)
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
         #50;reset = 1; #30;reset = 0;
-
-        DB = 8'b01000001;
+        //lw.vt
+        DA = 9'b000100000; //A = funct (4 bits) + rd (5 bits)
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
         #50;reset = 1; #30;reset = 0;
-
-
-        //Simulating neuron state loading
-        DA = 8'b00000000; //A = funct (3 bits) + rd (5 bits)
+        //lw.nt
+        DA = 9'b001000000;
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
         #50;reset = 1; #30;reset = 0;
-
-        DA = 8'b00100000; //A = funct (3 bits) + rd (5 bits)
-        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
-        #50;reset = 1; #30;reset = 0;
-
-        DA = 8'b01000000;
-        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
-        #50;reset = 1; #30;reset = 0;
-        */
-        //-----------------------------------------------------------------------------------------------------------------
-        //Simulating doth and dota
-        //Simulating computation and neuron storing for doth
-        //WVR Load, SVR Load, NSR Store
-        //WVR DC, SVR DB, NSR DA
-        //SVR funct3's
-        //011- 32 neurons 1 register 100 - 128 neurons 4 registers
-        //WVR funct3's
-        //Storing into WVR and SVRs
+        
+        //Neuron Current Computing Instructions--------------------------------------------------
+        //dota
+        //1. Storing data into WVR and SVR from Memory (la.wv)
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test dat
-        DB = 8'b01000000;
-        #50;
-        DB = 8'bxxxxxxxx;
+        DB = 9'b001000000;
+        #50;DB = 9'bxxxxxxxxx;
+        //(la.sv)
         rdata = 512'h11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111;
-        DC = 8'b01000000;
+        DC = 9'b001000000;
+        #50;
+        //2. Sending approriate DB DC Signals to WVR and SVR respectively to load the data from registers
+        DB = 9'b010000000; //load spike vectors of 128 neurons (4 registers)
+        DC = 9'b010000000; //load weight vectors of 128 neurons (16 registers)
+        #100; //time for computation
+        DA = 9'b010000000; //NSR signal to store 128 neurons     
+        rdata = Cur2; //selecting Output from S-Type accumulator 
         #50;
 
-        //Loading from the WVR and SVR
-        DB = 8'b10000000;
-        DC = 8'b10000000;
-        #100; //let it compute
-        DA = 9'b010000000; //storing 128 neurons at a time.     
-        rdata = Cur2;
+        reset = 1; //resets cur1 as well
         #50;
-        DA = 9'b100100000; //storing 128 neurons at a time.    
+        reset = 0;
+
+        //doth
+        //1. Storing data into WVR and SVR from Memory (la.wv)
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test dat
+        DB = 9'b001000000;
+        #50;DB = 9'bxxxxxxxxx;
+        //(la.sv)
+        rdata = 512'h11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111;
+        DC = 9'b001000000;
         #50;
+        //2. Sending approriate DB DC Signals to WVR and SVR respectively to load the data from registers
+        DB = 9'b001100000; //load spike vectors of 32 neurons (1 register)
+        DC = 9'b001100000; //load weight vectors of 32 neurons (4 registers)
+        #100; //time for computation
+        DA = 9'b001100000; //NSR signal to store 128 neurons     
+        rdata = Cur2; //selecting Output from S-Type accumulator 
+        #50;
+
+        reset = 1; //resets cur1 as well
+        #50;
+        reset = 0;
+
+
+        //convh
+        //1. Storing data into WVR and SVR from Memory (la.wv)
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test dat
+        DB = 9'b001000000;
+        #50;DB = 9'bxxxxxxxxx;
+        //(la.sv)
+        rdata = 512'h11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111;
+        DC = 9'b001000000;
+        #50;
+        //2. Sending approriate DB DC Signals to WVR and SVR respectively to load the data from registers
+        DB = 9'b001100000; //load spike vectors of 32 neurons (1 register)
+        DC = 9'b001100000; //load weight vectors of 32 neurons (4 registers)
+        #100; //time for computation
+        DA = 9'b010100010; //Storing the result in NSR register 4
+        rdata = Cur3; //selecting Output from N-Type accumulator 
+        #50;
+
+        reset = 1; //resets cur1 as well
+        #50;
+        reset = 0;
+        
+        //conva
+        //1. Storing data into WVR and SVR from Memory (la.wv)
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test dat
+        DB = 9'b001000000;
+        #50;DB = 9'bxxxxxxxxx;
+        //(la.sv)
+        rdata = 512'h11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111;
+        DC = 9'b001000000;
+        #50;
+        //2. Sending approriate DB DC Signals to WVR and SVR respectively to load the data from registers
+        DB = 9'b010000000; //load spike vectors of 128 neurons (4 registers)
+        DC = 9'b010000000; //load weight vectors of 128 neurons (16 registers)
+        #100; //time for computation
+        DA = 9'b010100010; //NSR signal to storeType 128 neurons     
+        rdata = Cur3; //selecting Output from N- accumulator 
+        #50;
+
+        reset = 1; //resets cur1 as well
+        #50;
+        reset = 0;
+
+        //convmh - stores 4 neurons
+        //1. Storing data into WVR and SVR from Memory (la.wv)
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test dat
+        DB = 9'b001000000;
+        #50;DB = 9'bxxxxxxxxx;
+        //(la.sv)
+        rdata = 512'h11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111;
+        DC = 9'b001000000;
+        #50;
+        //2. Sending approriate DB DC Signals to WVR and SVR respectively to load the data from registers
+        DB = 9'b001100000; //load spike vectors of 32 neurons (1 register)
+        DC = 9'b001100000; //load weight vectors of 32 neurons (4 registers)
+        #100; //time for computation
+        DA = 9'b011000010; //Storing the result 4 neurons in NSR register 4
+        rdata = Cur4; //selecting Output from N-Type accumulator 
+        #50;
+
+        reset = 1; //resets cur1 as well
+        #50;
+        reset = 0;
+
+        //convma - stores 16 neurons
+        //1. Storing data into WVR and SVR from Memory (la.wv)
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test dat
+        DB = 9'b001000000;
+        #50;DB = 9'bxxxxxxxxx;
+        //(la.sv)
+        rdata = 512'h11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111;
+        DC = 9'b001000000;
+        #50;
+        //2. Sending approriate DB DC Signals to WVR and SVR respectively to load the data from registers
+        DB = 9'b010000000; //load spike vectors of 128 neurons (4 registers)
+        DC = 9'b010000000; //load weight vectors of 128 neurons (16 registers)
+        #100; //time for computation
+        DA = 9'b011100010; //Storing result of 16 neurons in register 4 and 5     
+        rdata = Cur3; //selecting Output from N- accumulator 
+        #50;
+        //Not resetting so as to use the result for state updating (next instruction)
+        reset = 1; #50; reset = 0;
+
+        //Neuron State Updating Instructions--------------------------------------------------
+        //Re running dota
+        //1. Storing data into WVR and SVR from Memory (la.wv)
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test dat
+        DB = 9'b001000000;
+        #50;DB = 9'bxxxxxxxxx;
+        //(la.sv)
+        rdata = 512'h11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111;
+        DC = 9'b001000000;
+        #50;
+        //2. Sending approriate DB DC Signals to WVR and SVR respectively to load the data from registers
+        DB = 9'b010000000; //load spike vectors of 128 neurons (4 registers)
+        DC = 9'b010000000; //load weight vectors of 128 neurons (16 registers)
+        #100; //time for computation
+        DA = 9'b010000000; //NSR signal to store 128 neurons     
+        rdata = Cur2; //selecting Output from S-Type accumulator 
+        #50;
+
+        //upds
+        DA = 9'b100000000; //Updating states of one register (8 neurons)  
+        #50 
+        //updg
+        DA = 9'b100100010; //Updating states of all regiseters (32 neurons)
+        #50
+        reset = 1; #30; reset = 0;
+
         $finish;
     end
 
