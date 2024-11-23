@@ -1,21 +1,20 @@
 module testbench();
-    //testbench registers
     reg clk;
     reg reset;
-    reg [8:0] DA;
-    reg [8:0] DB;
-    reg [8:0] DC;
-    reg [511:0] rdata; // will be passed to lsu
-    wire [511:0] vector; //once updated, will be passed to wvr/svr
-    wire [511:0] S;
-    wire [511:0] W;
-    wire [511:0] Cur1; //Current Input
-    wire [511:0] Cur2; //Current Output
-    wire [511:0] Cur3; //Current Output for Neuron type
-    wire [511:0] Cur4; //Current output for Neuron Type parallelism
+    reg [8:0] DA; //Input to NSR
+    reg [8:0] DB; //Input to SVR
+    reg [8:0] DC; //Input to WVR
+    reg [511:0] rdata; //Input register for setting rdata
+    wire [511:0] vector; //Output wire from LSU to NSR
+    wire [511:0] S; //Output wire from SVR to N-Type accumulator, S-Type accumulator, and Neuron Array 
+    wire [511:0] W; //Output wire from WVR to N-Type accumulator, S-Type accumulator, and Neuron Array 
+    wire [511:0] Cur1; //Current Output from NSR to N-Type Accumulator, S-Type Accumulator, and Neuron Array's output
+    wire [511:0] Cur2; //Current Output from S-Type Accumulator
+    wire [511:0] Cur3; //Current Output from N-Type Accumulator
+    wire [511:0] Cur4; //Current Output from Neuron Array
 
-    // Output wires
-    //wvr
+    //Wires to output Registers
+    //To: WVR status registers for output monitoring
     wire [31:0] wvr_out_r1;
     wire [31:0] wvr_out_r2;
     wire [31:0] wvr_out_r3;
@@ -33,7 +32,7 @@ module testbench();
     wire [31:0] wvr_out_r15;
     wire [31:0] wvr_out_r16;
 
-    //svr
+    //To: SVR status registers for output monitoring
     wire [31:0] svr_out_r1;
     wire [31:0] svr_out_r2;
     wire [31:0] svr_out_r3;
@@ -51,7 +50,7 @@ module testbench();
     wire [31:0] svr_out_r15;
     wire [31:0] svr_out_r16;
 
-    //NSR other
+    //To: NSR status registers for output monitoring
     wire [31:0] rpr_out_0;
     wire [31:0] vtr_out_0;
     wire [31:0] ntr_out_0;
@@ -59,7 +58,7 @@ module testbench();
     wire [31:0] ntr_out_2;
     wire [31:0] ntr_out_3;
 
-    //NSR current
+    //To: NSR current registers for output monitoring
     wire [31:0] nsr_out_r1;   
     wire [31:0] nsr_out_r2;   
     wire [31:0] nsr_out_r3;    
@@ -82,7 +81,7 @@ module testbench();
         .clk(clk),
         .reset(reset),
         .A(DC),
-        .D(vector), //vector from lsu goes into D as vector
+        .D(vector), 
         .W(W),
 
         .wvr_out_r1(wvr_out_r1),
@@ -107,7 +106,7 @@ module testbench();
         .clk(clk),
         .reset(reset),
         .A(DB),
-        .D(vector), //vector goes as D signal into SVR module
+        .D(vector), 
         .S(S),
 
         .svr_out_r1(svr_out_r1),
@@ -135,13 +134,12 @@ module testbench();
         .D(vector),  
         .Cur(Cur1),
    
-                        //vector goes as D signal into GPRs module
         .rpr_out_0(rpr_out_0),          // RPR: Output for shared refractory period
         .vtr_out_0(vtr_out_0),          // VTR: Output for shared voltage threshold
         .ntr_out_0(ntr_out_0),          // NTR: Output for register 0
         .ntr_out_1(ntr_out_1),          // NTR: Output for register 1
         .ntr_out_2(ntr_out_2),          // NTR: Output for register 2
-        .ntr_out_3(ntr_out_3),                   // NTR: Output for register 3
+        .ntr_out_3(ntr_out_3),          // NTR: Output for register 3
 
         .nsr_out_r1(nsr_out_r1),
         .nsr_out_r2(nsr_out_r2),
@@ -172,8 +170,8 @@ module testbench();
     SAcc sacc(
         .clk(clk),
         .reset(reset),
-        .S(S), // 32 or 128 spikes ()
-        .W(W), //32 or 128 weights
+        .S(S), 
+        .W(W), 
         .Cur_Input(Cur1),
         .Cur_Output(Cur2)
     );
@@ -181,19 +179,19 @@ module testbench();
     NAcc nacc(
         .clk(clk),
         .reset(reset),
-        .S(S), // 32 or 128 spikes ()
-        .W(W), //32 or 128 weights
+        .S(S), 
+        .W(W), 
         .Cur_Input(Cur1),
-        .Cur_Output(Cur3) // 1 neurons current
+        .Cur_Output(Cur3)
     );
 
     NeuronArray narray(
         .clk(clk),
         .reset(reset),
-        .S(S), // 32 or 128 spikes ()
-        .W(W), //32 or 128 weights
+        .S(S), 
+        .W(W), 
         .Cur_Input(Cur1),
-        .Cur_Output(Cur4) //4 or 16 neurons current
+        .Cur_Output(Cur4)
     );
 
     always @(posedge reset) begin
@@ -215,10 +213,8 @@ module testbench();
         $dumpvars(0, testbench);
         
         //Resetting
-        clk = 0;
-        reset = 1;
-        #10;
-        reset = 0;
+        clk = 0;        
+        reset = 1; #50; reset = 0;
 
         //WVR Storing Instructions--------------------------------------------------
         //lw.wv
@@ -279,10 +275,7 @@ module testbench();
         DA = 9'b010000000; //NSR signal to store 128 neurons     
         rdata = Cur2; //selecting Output from S-Type accumulator 
         #50;
-
-        reset = 1; //resets cur1 as well
-        #50;
-        reset = 0;
+        reset = 1; #50; reset = 0;
 
         //doth
         //1. Storing data into WVR and SVR from Memory (la.wv)
@@ -300,11 +293,7 @@ module testbench();
         DA = 9'b001100000; //NSR signal to store 128 neurons     
         rdata = Cur2; //selecting Output from S-Type accumulator 
         #50;
-
-        reset = 1; //resets cur1 as well
-        #50;
-        reset = 0;
-
+        reset = 1; #50; reset = 0;
 
         //convh
         //1. Storing data into WVR and SVR from Memory (la.wv)
@@ -322,11 +311,8 @@ module testbench();
         DA = 9'b010100010; //Storing the result in NSR register 4
         rdata = Cur3; //selecting Output from N-Type accumulator 
         #50;
+        reset = 1; #50; reset = 0;
 
-        reset = 1; //resets cur1 as well
-        #50;
-        reset = 0;
-        
         //conva
         //1. Storing data into WVR and SVR from Memory (la.wv)
         rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test dat
@@ -343,10 +329,7 @@ module testbench();
         DA = 9'b010100010; //NSR signal to storeType 128 neurons     
         rdata = Cur3; //selecting Output from N- accumulator 
         #50;
-
-        reset = 1; //resets cur1 as well
-        #50;
-        reset = 0;
+        reset = 1; #50; reset = 0;
 
         //convmh - stores 4 neurons
         //1. Storing data into WVR and SVR from Memory (la.wv)
@@ -364,10 +347,7 @@ module testbench();
         DA = 9'b011000010; //Storing the result 4 neurons in NSR register 4
         rdata = Cur4; //selecting Output from N-Type accumulator 
         #50;
-
-        reset = 1; //resets cur1 as well
-        #50;
-        reset = 0;
+        reset = 1; #50; reset = 0;
 
         //convma - stores 16 neurons
         //1. Storing data into WVR and SVR from Memory (la.wv)
