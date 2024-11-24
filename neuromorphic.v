@@ -294,7 +294,7 @@ module NSR (
     reg [31:0] rpr;                       // Shared Refractory Period Register (32 bits)
     reg [31:0] vtr;                       // Shared Voltage Threshold Register (32 bits)
     reg [31:0] ntr [0:3];                 // Neuron Type Registers (4x32 bits)
-    reg [31:0] current_registers [0:15];  // NSR (10x32 bits)
+    reg [31:0] current_registers [0:15];  // NSR (16x32 bits)
 
     integer i, j;
     real temp;
@@ -364,7 +364,7 @@ module NSR (
             end
             
             4'b0101: begin //Storing Current of one neuron (first four bits of rd) (convh/conva)
-                current_registers[A[4 : 0]][4 : 0] <= D[4 : 0]; // extract current from 128 neurons (4 bits each) and store in current_registers
+                current_registers[A[4 : 0]][3 : 0] <= D[3 : 0]; // extract current from 128 neurons (4 bits each) and store in current_registers
                 Cur <= D;
             end
 
@@ -391,7 +391,7 @@ module NSR (
                     end
                 end
                 else begin
-                    rpr -= 1;
+                    rpr =rpr-1;
                 end
             end 
 
@@ -409,7 +409,7 @@ module NSR (
                 end
                 
                 else begin
-                    rpr -= 1;
+                    rpr =rpr- 1;
                 end
             end 
             

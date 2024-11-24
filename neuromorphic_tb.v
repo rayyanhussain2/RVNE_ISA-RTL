@@ -196,9 +196,9 @@ module testbench();
 
     always @(posedge reset) begin
         if (reset)begin
-            DC = 8'bxxxxxxxx;
-            DB = 8'bxxxxxxxx;
-            DA = 8'bxxxxxxxx;
+            DC = 9'bxxxxxxxxx;
+            DB = 9'bxxxxxxxxx;
+            DA = 9'bxxxxxxxx;
             rdata = 512'b0;
         end
     end
@@ -233,11 +233,11 @@ module testbench();
         //SVR Storing Instructions--------------------------------------------------
         //lw.sv
         DB = 9'b000000001; //A = funct (4 bits) + rd (5 bits)
-        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF11111234; // Test data
         #50;reset = 1; #30;reset = 0;
         //lh.sv
         DB = 9'b000100001; //A = funct (4 bits) + rd (5 bits)
-        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; // Test data
+        rdata = 512'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF11111111222222223333333344444444; // Test data
         #50;reset = 1; #30;reset = 0;
         //la.sv
         DB = 9'b001000001;
