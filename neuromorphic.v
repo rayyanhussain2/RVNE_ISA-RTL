@@ -70,9 +70,9 @@ module WVR (
             wvr_out_r16 <= 32'b0;
         end
         else begin
-            case (A[7:5])
+            case (A[8:5])
                 4'b0000: begin  //Store 8 Neurons' (1register) weights onto rd
-                    wvr_memory_bank[A[4:0]] <= D[31:0];
+                    wvr_memory_bank[A[4:0]% 16] <= D[31:0];
                 end
                 
                 4'b0001: begin  //Store 32 Neurons' (4 consecutive registers) weights onto rd to rd + 3
@@ -192,9 +192,9 @@ module SVR (
         end
 
         else begin
-        case (A[7:5])
+        case (A[8:5])
             4'b0000: begin //Store 32 Neurons' (1register) Spikes onto rd
-                svr_memory_bank[A[4:0]] <= D[31:0];
+                svr_memory_bank[A[4:0] % 16] <= D[31:0];
             end
 
             4'b0001: begin //Store 128 Neurons' (4 consecutive registers) spikes onto rd to rd + 3
@@ -212,11 +212,11 @@ module SVR (
                 end
             end
             
-            4'b0011: begin //Load weights of 32 Neurons (1 Register) onto the first 32 lines of the output bus (convh/doth)
+            4'b0011: begin //Load spike of 32 Neurons (1 Register) onto the first 32 lines of the output bus (convh/doth)
                 S[31:0]  <= svr_memory_bank[A[4:0] % 16];
             end
 
-            4'b0100: begin //Load weights of 128 Neurons (4 Registers) onto 128 of the output bus (convh/doth)
+            4'b0100: begin //Load spike of 128 Neurons (4 Registers) onto 128 of the output bus (convh/doth)
                 S[31:0]   <= svr_memory_bank[A[4:0] % 16];
                 S[63:32] <= svr_memory_bank[(A[4:0]+1) % 16];
                 S[95:64] <= svr_memory_bank[(A[4:0]+2) % 16] ;

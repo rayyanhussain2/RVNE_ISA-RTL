@@ -341,8 +341,8 @@ module testbench();
         DC = 9'b001000000;
         #50;
         //2. Sending approriate DB DC Signals to WVR and SVR respectively to load the data from registers
-        DB = 9'b001100000; //load spike vectors of 32 neurons (1 register)
-        DC = 9'b001100000; //load weight vectors of 32 neurons (4 registers)
+        DB = 9'b001100000; //load spike vectors of 128 neurons (4 registers)
+        DC = 9'b001100000; //load weight vectors of 128 neurons (16 registers)
         #100; //time for computation
         DA = 9'b011000010; //Storing the result 4 neurons in NSR register 4
         rdata = Cur4; //selecting Output from N-Type accumulator 
