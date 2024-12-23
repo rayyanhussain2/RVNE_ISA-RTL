@@ -8,24 +8,24 @@ This project implements most of RVNE Instruction Set Architecture (ISA) in RTL a
 
 The features of RVNE make them highly suitable for real-time data processing and complex decision-making applications. SNNs, which rely on discrete spikes for communication instead of continuous signals, are naturally aligned with this computing paradigm.
 
-It incorporates specialize                                                                                                                                                                         dsfsd instructions to manage synaptic weights, spikes, neuron states, and both neuron-wise and synaptic-wise current computations. By addressing these needs, the ISA facilitates efficient processing and supports the inherent parallelism of neuromorphic systems. 
+It incorporates specialized instructions to manage synaptic weights, spikes, neuron states, and both neuron-wise and synaptic-wise current computations. By addressing these needs, the ISA facilitates efficient processing and supports the inherent parallelism of neuromorphic systems. 
 
 The following diagram illustrates all the essential actions required for a SNN.
 
-![alt](.other/mdfiles/image1.png)
+![](.other/mdfiles/image1.png)
 
 ## **RVNE ISA**
 
 The following instructions were implemented:
 
-![][image2]
+![](.other/mdfiles/image2.png)
 
 # **Approach**
 
 The Verilog code and testbench replicate the workings of the neuromorphic extension part of the proposed NeuroRV Core.
 
 Every Unit (SVR, NVR, WVR, S-Wise ACC) is a module in the Verilog code with appropriate input and output signals provided in the testbench to emulate various instructions accordingly.  
-![][image3]
+![](.other/mdfiles/image3.png)
 
 The testbench emulates the different signals sent to the modules for execution. For example, for “lw.wv”, the DC signal would be triggered, sending funct3 \+ rd of 0000 \+ rd to take the first 32 bits of the bus to store at the appropriate rd register.
 
@@ -48,16 +48,14 @@ The testbench emulates the different signals sent to the modules for execution. 
 * NTR is 4 bits (1111 to represent a spike and 0000 for inhibiting). This decision was made to match the width of the current of a neuron (4 bits) to make neuron state updating easy (Refer to the explanation under NSR Module for more details).
 
 * The formula used for calculating membrane potential:
-
-	![][image4]
-
+$$V = I \cdot Resistance (0.04) + Rest\ Potential(0.01)$$
 
 
 ## **Modules**
 
 ### SVR
 
-#### ![][image5]
+#### ![](.other/mdfiles/image5.png)
 
 #### Data Signal
 
@@ -79,7 +77,7 @@ Consists of funct (4-bits) \+ rd (5-bits). The following funct numbers are used 
 
 ### WVR
 
-![][image6]
+![](.other/mdfiles/image6.png)
 
 #### Data Signal
 
@@ -97,7 +95,7 @@ Consists of funct (4-bits) \+ rd (5-bits). The following funct numbers are used 
 
 ### NSR
 
-![][image7]
+![](.other/mdfiles/image7.png)
 
 #### Data Signal
 
@@ -143,7 +141,8 @@ The algorithm for state updating is as follows:
 
          1. If it does, set the NTR of those four bits to 1111\. 
 
-### NAcc![][image8]
+### NAcc
+![](.other/mdfiles/image8.png)
 
 #### S Signal
 
@@ -162,11 +161,12 @@ Initially 0, Cur\_Input signal is updated with one of  Cur\_Output from N-Type, 
 Computation is done for all 128 neurons across the bus regardless of whether the input is 32 or 128 from S/W. NeuroRV Core doesn’t specify any signal going into the Accumulator. Hence, for instructions like “doth/convh” if only 32 neurons are loaded, other bits of the S signal is 0, and other bits of Cur\_Output are computed as 0\. Moreover, NSR will only store one (4/16 in convmh/convma \- refer to Neuron Array Module) neuron, taking the first 4 bits of the Cur\_Output bus.
 
 The following formulae are used to compute N-Type Accumulation (one neuron’s output current):    
-![][image9]
+$$\sum_{i = 0}^{128} S[i] \cdot W[j] \quad \text{where} \quad j = i \cdot 4 + 4 + \text{Cur\_input}(3 : 0)
+$$
 
 ### SAcc
 
-![][image10]
+![](.other/mdfiles/image10.png)
 
 #### S Signal
 
@@ -182,12 +182,13 @@ Initially 0, Cur\_Input signal is updated with one of  Cur\_Output from N-Type, 
 
 #### Accumulation Logic
 
-Similar to N-Type, computation is done for all 128 neurons of the S/W/Cur bus regardless of the input/output. The following equation is used to compute the S-type.  
-![][image11]
+Similar to N-Type, computation is done for all 128 neurons of the S/W/Cur bus regardless of the input/output. The following equation is used to compute the S-type. 
+$$Cur\_Output[i\cdot4+:4] = (S[0] \cdot W[i\cdot4 +: 4]) + Cur\_Input[i\cdot4 +: 4]
+$$ 
 
 ### NeuronArray
 
-![][image12]
+![](.other/mdfiles/image12.png)
 
 #### S Signal
 
