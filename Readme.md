@@ -48,6 +48,7 @@ The testbench emulates the different signals sent to the modules for execution. 
 * NTR is 4 bits (1111 to represent a spike and 0000 for inhibiting). This decision was made to match the width of the current of a neuron (4 bits) to make neuron state updating easy (Refer to the explanation under NSR Module for more details).
 
 * The formula used for calculating membrane potential:
+
 $$V = I \cdot Resistance (0.04) + Rest\ Potential(0.01)$$
 
 
@@ -161,8 +162,8 @@ Initially 0, Cur\_Input signal is updated with one of  Cur\_Output from N-Type, 
 Computation is done for all 128 neurons across the bus regardless of whether the input is 32 or 128 from S/W. NeuroRV Core doesn’t specify any signal going into the Accumulator. Hence, for instructions like “doth/convh” if only 32 neurons are loaded, other bits of the S signal is 0, and other bits of Cur\_Output are computed as 0\. Moreover, NSR will only store one (4/16 in convmh/convma \- refer to Neuron Array Module) neuron, taking the first 4 bits of the Cur\_Output bus.
 
 The following formulae are used to compute N-Type Accumulation (one neuron’s output current):    
-$$\sum_{i = 0}^{128} S[i] \cdot W[j] \quad \text{where} \quad j = i \cdot 4 + 4 + \text{Cur\_input}(3 : 0)
-$$
+
+$$\sum_{i = 0}^{128} S[i] \cdot W[i\cdot4+:4] + CurInput(3 : 0)$$
 
 ### SAcc
 
@@ -183,8 +184,8 @@ Initially 0, Cur\_Input signal is updated with one of  Cur\_Output from N-Type, 
 #### Accumulation Logic
 
 Similar to N-Type, computation is done for all 128 neurons of the S/W/Cur bus regardless of the input/output. The following equation is used to compute the S-type. 
-$$Cur\_Output[i\cdot4+:4] = (S[0] \cdot W[i\cdot4 +: 4]) + Cur\_Input[i\cdot4 +: 4]
-$$ 
+
+$$CurOutput[i\cdot4+:4] = (S[0] \cdot W[i\cdot4 +: 4]) + CurInput[i\cdot4 +: 4]$$ 
 
 ### NeuronArray
 
