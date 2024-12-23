@@ -2,7 +2,7 @@
 
 # **Introduction**
 
-This project implements most of RVNE Instruction Set Architecture (ISA) in RTL as specified in the paper “Back to Homogeneous Computing: A Tightly-Coupled Neuromorphic Processor With Neuromorphic ISA” (IEEE TRANSACTIONS ON PARALLEL AND DISTRIBUTED SYSTEMS, VOL. 34, NO. 11\)
+This project implements most of RVNE Instruction Set Architecture (ISA) in verilog (RTL) as specified in the paper “Back to Homogeneous Computing: A Tightly-Coupled Neuromorphic Processor With Neuromorphic ISA” (IEEE TRANSACTIONS ON PARALLEL AND DISTRIBUTED SYSTEMS, VOL. 34, NO. 11\)
 
 ## **Spiking Neural Networks (SNN)**
 
