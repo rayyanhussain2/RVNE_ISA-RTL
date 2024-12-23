@@ -1,8 +1,13 @@
-# **RVNE ISA - RTL**
+**Group 9**  
+[Rayyan Hussain](mailto:rayyan22399@iiitd.ac.in)  
+[Vishal Kumar](mailto:vishal24197@iiitd.ac.in)  
+[Sibani Sasmala](mailto:sibani24151@iiitd.ac.in)
+
+# **End-Term Evaluation Report**
 
 # **Introduction**
 
-This project implements RVNE Instruction Set Architecture (ISA) in RTL as specified in the paper “Back to Homogeneous Computing: A Tightly-Coupled Neuromorphic Processor With Neuromorphic ISA” (IEEE TRANSACTIONS ON PARALLEL AND DISTRIBUTED SYSTEMS, VOL. 34, NO. 11\)
+This report examines the implementation of RVNE Instruction Set Architecture (ISA) in neuromorphic processors, which is specified in the paper “Back to Homogeneous Computing: A Tightly-Coupled Neuromorphic Processor With Neuromorphic ISA” (IEEE TRANSACTIONS ON PARALLEL AND DISTRIBUTED SYSTEMS, VOL. 34, NO. 11\)
 
 ## **Spiking Neural Networks (SNN)**
 
@@ -18,14 +23,14 @@ The following diagram illustrates all the essential actions required for a SNN.
 
 The following instructions were implemented:
 
-![][image2]
+![](image2)
 
 # **Approach**
 
 The Verilog code and testbench replicate the workings of the neuromorphic extension part of the proposed NeuroRV Core.
 
 Every Unit (SVR, NVR, WVR, S-Wise ACC) is a module in the Verilog code with appropriate input and output signals provided in the testbench to emulate various instructions accordingly.  
-![][image3]
+![](image3)
 
 The testbench emulates the different signals sent to the modules for execution. For example, for “lw.wv”, the DC signal would be triggered, sending funct3 \+ rd of 0000 \+ rd to take the first 32 bits of the bus to store at the appropriate rd register.
 
@@ -51,7 +56,21 @@ The testbench emulates the different signals sent to the modules for execution. 
 
 	![][image4]
 
+## 
 
+## 
+
+## 
+
+## 
+
+## 
+
+## 
+
+## 
+
+## 
 
 ## **Modules**
 
@@ -204,6 +223,202 @@ Initially 0, the Cur\_Input signal is updated with one of  Cur\_Output from N-Ty
 #### Accumulation Logic
 
 Since convmh/convma takes in 128 neurons as input from SVR, WVR, and NSR, we utilize 128 bits of S signal and 512 bits of W signal. Since Computation is done for 4/16 neurons, S-type computation is done for all 16 neurons. The module sends a 16-bit output signal in Cur\_Output (works for 4 neurons case as bits of other 12 neurons will be 0, and NSR would be taking the first 16 bits / 4 neurons of the bus to store in one register as appropriate DA signal will be sent).
+
+# 
+
+# 
+
+# 
+
+# 
+
+# **Simulating Instructions (Testbench)**
+
+## **Loading in Weight Vectors**
+
+**![][image13]**
+
+Initially, the clock signal is reset to clear all register banks. After 50 ns, the reset signal is pulled high (disabled), and the WVR instruction is executed. The DC signal, which includes the function bits and the destination address, loads different weights into the WVR bank.
+
+There are three types of WVR load instructions.
+
+**Case 1 (lw.wv):** The function bits 0000 (4 bits) corresponds to the lw.wv instruction, which loads a word (8 weights, 8 bytes) of data. The data is sourced from a 512-bit rdata and is directed to the WVR bank using a 5-bit address. As seen in the waveform, an address value of 0x1 loads the rdata 0x11111234 into the second register of the WVR bank.
+
+| DC \= 9'b000000001 |
+| :---- |
+
+![][image14]
+
+**Case 2 (lh.wv):** The function bits 0001 (4 bits) correspond to the lh.wv instruction, which loads half weight (32 weights, 32 bytes) of data. This data is sourced from a 512-bit rdata and written to the WVR bank using a 5-bit address. As observed in the waveform, an address value of 0x3 loads the rdata \= 0x11111111222222223333333344444444, starting from the 4th register of the WVR bank in a contiguous manner.
+
+| DC \= 9'b000100011 |
+| :---- |
+
+![][image15]
+
+**Case 3 (la.wv):** The function bits 0010 (4 bits) correspond to the la.wv instruction, which loads all (128 weights, 128 bytes) of data. This data is sourced from a 512-bit Rdata and written to the WVR bank using a 5-bit address. As observed in the waveform, the rdata is loaded from the first register into all 16 register banks of the WVR bank in a contiguous manner.
+
+| DC \= 9'b001000001 |
+| :---- |
+
+**![][image16]**
+
+## 
+
+## 
+
+## **Loading in Spike Vectors**
+
+**![][image17]**
+
+The DB signal, which includes the function bits and the destination address, is used to load different spikes into the SVR bank.
+
+There are three types of SVR load instructions.
+
+**Case 1 (lw.sv):** The function bits 0000 (4 bits) corresponds to the lw.sv instruction, which loads a word (32 spikes, 32 bits) of data. The data is sourced from a 512-bit rdata and is directed to the SVR bank using a 5-bit address. As seen in the waveform an address value of 0x1 loads the data 0x11111234 into the second register of the SVR bank.
+
+| DB \= 9'b000000001 |
+| :---- |
+
+![][image18]
+
+**Case 2 (lh.sv):** The function bits 0001 (4 bits) corresponds to the lh.sv instruction, which loads half spikes (128 spikes, 128 bits) of data. This data is sourced from a 512-bit rdata and written to the WVR bank using a 5-bit address. As observed in the waveform, an address value of 0x1 loads the data 0x11111111222222223333333344444444, starting from the 2nd register of the SVR bank in a contiguous manner.
+
+| DB \= 9'b000100001 |
+| :---- |
+
+![][image19]
+
+**Case 3 (la.sv):** The function bits 0010 (4 bits) corresponds to the la.sv instruction, which loads all (512 spikes, 512 bits) of data. This data is sourced from a 512-bit rdata and written to the SVR bank using a 5-bit address. As observed in the waveform, the data is loaded from the first register into all 16 register banks of the SVR bank in a contiguous manner.
+
+| DB \= 9'b001000001 |
+| :---- |
+
+**![][image20]**
+
+## 
+
+## **Loading Neuron Paramters**
+
+**![][image21]**
+
+There are three types of Neuron parameter load instructions.
+
+**Case 1 (lw.rp):** The function bits 0000 (4 bits) corresponds to the lw.rp instruction, which loads a refractory period (32 bits) of data. This data is sourced from a 512-bit rdata and directed to the RPR register in the NSR bank using a fixed 5-bit address. As seen in the waveform an fixed address value loads the data 0xFFFFFFFF into the pre-defined register of the NSR bank.
+
+| DA \= 9'b000000000 |
+| :---- |
+
+![][image22]
+
+**Case 2 (lw.vt):** The function bits 0001 (4 bits) corresponds to the lw.vt instruction, which loads a threshold voltage (32 bits) of data. This data is sourced from a 512-bit rdata and directed to the VTR register in the NSR bank using a fixed 5-bit address. As seen in the waveform an fixed address value loads the data 0xFFFFFFFF into the pre-defined register of the NSR bank.
+
+| DA \= 9'b000100000 |
+| :---- |
+
+![][image23]
+
+**Case 3 (lw.nt):** The function bits 0010 (4 bits) corresponds to the lw.nt instruction, which loads neuron-type data. This data is extracted from a 512-bit rdata and stored in the NTR register within the NSR bank, distributed across four 32-bit NTR registers. As observed in the waveform, it loads data for 32 neurons, with each bit indicating the neuron type, into the designated registers of the NSR bank.. 
+
+| DA \= 9'b001000000 |
+| :---- |
+
+![][image24]
+
+## **Neuron Computation**
+
+### convh
+
+The instruction read 32 weights from the Weight Vector Register (WVR) and 32 1-bit spikes from the Spike Vector Register (SVR), updating the current of a specified neuron through neuron-wise synaptic operations with a parallelism of 32\.  
+![][image25]
+
+* As explained earlier DB= 9'b001000000 and DC=9'b001000000 are used to load all 16 SVR and 16 WVR for the required computation of the convh.  
+* A DB \= 9'b001100000 signal is then sent to load spikes of 32 Neurons (1 Register) onto the first 32 lines of the output bus.  
+*  DC \= 9'b001100000 is sent to load weights of 32 Neurons (4 Register) onto the first 128 lines of the output bus.  
+* Finally, DA=9'b010100010 signal is sent along with the computed rdata (current\_ouput in the respective module is sent to rdata, which then sends it as Data signal to NSR) from N-type accumulator to update the current of  1 neuron (4 bits each) in NSR's register bank indexed by (00010).
+
+### conva
+
+These instructions read 128 weights from the Weight Vector Register (WVR) and 128 1-bit spikes from the Spike Vector Register (SVR), updating the current of a specified neuron through neuron-wise synaptic operations with a parallelism of 128.![][image26] 
+
+* DB= 9'b001000000 and DC=9'b001000000 user for loading all 16 SVR and 16 WVR for the required computation of the conva.
+
+* Then DB \= 9'b010000000, which loads in spikes of 128 Neurons (4 Register) onto the first 128 lines of the output bus.
+
+* DC \= 9'b010000000; Load weights of 128 Neurons (16 Register) onto the 512 lines of the output bus.
+
+* DA=9'b010100010 signal along with the computed rdata (current\_ouput in the respective module is sent to rdata, which then sends it as Data signal to NSR) from the N-Type accumulator is used to update the current of 1 neuron (4 bits each) in NSR's register bank indexed by 00010\.
+
+### convmh
+
+The instructions read 128 weights from the WVR and 128 1-bit spikes from the SVR, performing multiple neuron-wise synaptic operations to update the currents of 4 specified neurons with a parallelism of 128, facilitating the development of neural networks with smaller weight kernels.
+
+![][image27]
+
+* DB= 9'b001000000 and DC=9'b001000000 used for loading all 16 SVR and 16 WVR for the required computation of the convmh.  
+* DB \= 9'b010000000: Loads spikes of 128 Neurons (4 Register) onto the first 128 lines of the output bus.  
+* DC \= 9'b010000000: Loads weights of 128 Neurons (16 Register) onto the 512 lines of the output bus.  
+* DA=9'b010100010 signal along with the computed rdata (current\_ouput in the respective module is sent to rdata, which then sends it as Data signal to NSR) from Neuron Array Accumulator is used for updating the current of  4 neurons (4 bits each) in NSR's register bank indexed by 00010\.
+
+## 
+
+## 
+
+### 
+
+### convma
+
+The instructions read 128 weights from the WVR and 128 1-bit spikes from the SVR, performing multiple neuron-wise synaptic operations to update the currents of 16 specified neurons with a parallelism of 128, facilitating the development of neural networks with smaller weight kernels.  
+![][image28]
+
+* DB \= 9'b001000000 and DC \= 9'b001000000 were used to load all 16 SVR and 16 WVR for the required computation of the convma.  
+* DB \= 9'b010000000; Load spike of 128 Neurons (4 Register) onto the first 128 lines of the  output bus.  
+* DC \= 9'b010000000; Load weights of 128 Neurons (16 Register) onto the 512 lines of the output bus.  
+* DA=9'b011100010 signal along with the computed rdata (current\_ouput in the respective module is sent to rdata, which then sends it as Data signal to NSR) from Neuron Array Accumulator is used for updating the current of  16 neurons (4 bits each) in NSR's register bank indexed by 00010 and 00010\.
+
+### dota
+
+These instructions read 128 weights from the WVR, a 1-bit spike from the SVR, and a set of neuron currents, performing synapse-wise operations to update the currents of 128 specified neurons.
+
+![][image29]
+
+* DB= 9'b001000000 and DC=9'b001000000 user for loading all 16 SVR and 16 WVR for the required computation of the dota.
+
+* DB \= 9'b010000000; Load spike of 128 Neurons (4 Register) onto the first 128 lines of the  output bus.
+
+* DC \= 9'b010000000; Load weights of 128 Neurons (16 Register) onto the 512 lines of the output bus.  
+* DA=9'b010000000 signal is sent along with the computed rdata (current\_ouput in the respective module is sent to rdata, which then sends it as Data signal to NSR) from S-Type Accumulator to update the current of 128 neurons (4 bits each) in all 16 NSR's register bank.
+
+### doth
+
+These instructions read 32 weights from the WVR, a 1-bit spike from the SVR, and a set of neuron currents, performing synapse-wise operations to update the currents of 32 specified neurons.
+
+![][image30]
+
+* DB= 9'b001000000 and DC=9'b001000000 user for loading all 16 SVR and 16 WVR for the required computation of the doth.  
+* DB \= 9'b001100000; Load spikes of 32 Neurons (1 Register) onto the first 128 lines of the output bus.  
+* DC \= 9'b001100000; Load weights of 32 Neurons (4 Registers) onto the 512 lines of the output bus.  
+* DA=9'b001100000 signal is sent along with the computed rdata (current\_ouput in the respective module is sent to rdata, which then sends it as Data signal to NSR) from the S-Type Accumulator to update the currents of  32 neurons (4 bits each) in 4 of NSR's register bank indexed by 00000\.
+
+## **Neuron States Updating**
+
+![][image31]
+
+## **![][image32]**
+
+### upds
+
+| DA \= 9'b100000000; |
+| :---- |
+
+As explained previously in NSR Module’s Approach, 1000 as funct3 bits of DA signal updates states of neurons in one NTR register (indexed by 00000). For more information, refer to “States Update” section under NSR Module’s approach
+
+### updg
+
+| DA \= 9'b100100000; |
+| :---- |
+
+As explained previously in NSR Module’s Approach, 1001 as funct3 bits of DA signal updates states of neurons in all 4 NTR registers. For more information, refer to “States Update” section under NSR Module’s approach
 
 [image1]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAATQAAACOCAYAAAC/p/Q4AABF80lEQVR4Xu2dd5BeVf3/sTsW/vg66jiWcewzdsXeu2LviAV771hQSkBqqAECoqgriiigRLBQk00hNBtNQsruEwIoNlSElN0k53dfJ3nv75M392n7PJs8u/d+Zt5zy+fc0+457/s59e6UBlQ2b968Daa7eHo8Ta7rt97F3Za5b6V3nevL3Li43t200nWid3H3/ozr+q0vc9NK162+lpR28huDIjPtxXl6PE2u67fexd2WuW+ld53ry9y4uN7dtNJ1ondx9/6M6/qtL3PTStetvpaa0LabeHo8Ta7rt97F3Za5b6V3nevL3Li43t200nWid3H3/ozr+q0vc9NK162+lgEhNH9JncDF9e7GdQ4X17sb13Wi394YtPjUmHpUXQaW0Fy61bsb1zlcXO9uXNdO7+L6qcD2Dq/GjkfVpSa0ErfN3Peid3H9VGB7h1fjznBxfb9RdakJrcRtM/e96F1cPxXY3uHV2BabNm26E9xNv1F12SGE5i+hxtSgzvMdCyezmtCmXgaG0Fy61Q8aXFzvblzXb72Luy1z307v0s59O323MtX+uZ+u60TfLWrpTWpCmyK4uN7duK7fehd3W+a+nd6lnft2+m5lqv1zP13Xib5b1NKb1IQ2RXBxvbtxXb/1Lu62zH07vUs79+303cpU++d+uq4TfbeopTfpC6H5Syl7Ma7fHhgfH08bN27c5jqe6zq6Aerr8P6PZn0gfl/X+ItwvW7dum3C59qfwX30S+L+16jRDFWXHUZorXSdwMX1IqkNGzZkQuA4NjaWAbGIJBARiQhIxNMJmTkUF8LhKFIFOr/99tsn/CsjMA/b9dFdjRoRVZcZS2giKM4hkD/84Q8TpCaSQ9auXZuJ5j//+U8+l04kB0SC8hudyFG69evXb+OWc9375z//mc9vu+22dO211064cYi8YnqQeD+Kp7lGjarLjCU0WUiQz+rVq9O+++6b/va3v02Qg0iFpt/KlSvTUUcdlW644YZMaBAb9yOpiaAgR/SyukSQIq877rgju4G80N14443p2GOPzUR29dVXp5NPPjn9/e9/nyBB3HEkTiJEwsYP+VkTWo1OUXXpC6GVSauMdp3ry9y4uF5uOIpsIBeOEMTPfvaz9L///S9dfvnlafHixenUU09N55xzTvrXv/6VzjzzzLTrrrumCy64ILv505/+lH7605+mX/ziF+nKK6/M/uDHZZddlu8tWrQon998881pyZIl6ayzzkqXXHJJJkT8+MEPfpCGh4ezX+eff356zWtek84444z0u9/9Lru/9dZb07///e+0YMGC7PbSSy/NYUB++P3b3/42zZs3L42OjmayjE1UT2+7/Giln25wcX0ZunU/3VDLtjJjCU3WEpbQqlWr0mtf+9rUaDTSJz7xifT6178+HXbYYeld73pXmjNnTiabF73oRZmsIKDdd989HXDAAelTn/pUev/7358JB4J7z3vekw488MD0ute9Ln30ox9N8+fPT7vsskv63Oc+l370ox+lI444In3mM59Js2fPzv6dffbZmTQ5P/HEEzOJ4udNN92UDjnkkOw3xze/+c3ptNNOy8T60pe+NO23337pC1/4QvrYxz6Wm6ukRc1nT2+7/Giln25wcX0ZunU/3VDLtjJjCU19YzThsKQgsdHC4oHQ5s6dm5tzP/nJTzIZ0RSEQK666qq0//77Z7KCjE444YRMOoceemj69Kc/nU4//fTsH+T13ve+N5133nmZFJctW5ZJZ+nSpdm6wxr8wAc+kA4++ODcvISY/vjHP2brjPB+//vfZxLDUiSeWGMQIfEhPCw4/IRYIT/SVFtonZUBR7fupxtq2VZmLKFBWGpurlmzJr3qVa9KIyMjmbi+//3vZ7LDIuIagvnkJz+Zm4Rf/vKX09vf/vb0zW9+M33pS19Ke+yxRzr88MMz0dAUhIA4fuQjH0nnnntu+tCHPpQgSpqG3N97770z3vjGN2aLjWbkxz/+8Ux0ENpnP/vZ3BzFYrzuuuuyFXnxxRdnEsWCwy3NUfr13ve+96W//OUvOU01oXVWBhzdup9uqGVb6QuheSbvKCgu6kODZCAu+rZe/epXZ2L7/Oc/n4kDwvvNb36TLS/IBkKThfb1r389W0hXXHFFbjJiefHcd7/73dwE/N73vpfe/e53Z2KC8CCdRqORSQ8/ly9fngnqoIMOmrDQaLZCXBAhFuFb3vKWCYL84Q9/mPbcc89MsFhwhHHNNddkt/hNOjyt/UYkzDgQEtFOV2PHo+oyZYTm0krvuk7gonscRWhUNDrmscxockJoX/va19Ivf/nL3HSEUCCS66+/PpMRo5GQ1Ic//OFMbFhrX/nKVzLR0bzEuoLsaApCUhdddFEmRKwwOu6x9r7xjW/kEVMID7dYWx/84Adzv9hJJ52UvvjFL+Z4cA4Z0oeGHiKkmUt8iDOkCMnS5BRpuHiedIvoB/5D8nGKisJV013Xyt8I97vGjkHVZcYSGhWPSsg5zTosHoiCppymbzD3TM2+FStW5H4uKm+jsLYYbeQZrDv6tCA17jHqCfF961vfytbTn//854lVAFxDiDRhIVFAHCBMRle5JhysMkZX8RPLDT3TN4gX5xrZxErE7zIyQzxPukX0Q1YW+RXnxek6EloZsbnfNXYMqi4zltBUIWV1cNTcMs4130zzvmSZiARFiHqWZioW2zHHHJObhVhnmn+m/jrNLRMJAYWJThN7udY5bjSZF2IVsYgkFddmae4F0Y/4AeBaaVe+iLhqQhtsVF2mjNB2JKhgqogiDFkdIhYIQ8QjYhHxREKUP7jFGmPuGJNksajktwiKsEWgkeBEovJL0PM8B7kqDiIxxdsJQ6Tn590ivrtIUJpszFGkr/Rwjnu5w+rFmpQ/8kPxigQoeDxq9A9Vl74QWpm0ymjXub7MjUuZXuex4qiCxUoZiSISme7LYhLxiIhkVemeCEmVnGMkT4XLueIiIpP1o3sxLEhERBiJANE9hRnvtxLPr7I8U/iQGf2BNJNFroovzWJGgxksoenNwMfPf/7z9N///vdORBbfhfJZ9xV+FI9fje5RdakMoQE1/0Qycsc5FhdQsy+SWCS66D/WCZCVJkLgnHtIJMRIdNF9vBfjrrAUV4gOkmE1AkSjeEbSKMsrxPOrLM8UHwYoGNxgkEIkjRvCfcc73pGe9axnpZ133jnd+973Ts9//vPzKC2EJn9initefs/jUqM/qLpUhtBEZpCWCEQVjWvmlLFqAELTWk2eEaGpUuMWvdwdffTReYJs7IcTAekYzzmKAAXFR7r4nOKoVQ8MJDDBl8m4//jHP7I+WnpKt4vnV1me6Xmmp7DmFHAPPWllAIUJw/e9733TXe9613SXu9wlLxljFQTNcCYwq++PZ2TpKt+Uzpg2h8exRneouvSF0DxTdzRUOSNpUCEZYWSJUeyo50jF4/6sWbPyHDBGNekvY5STaRMiGggEQgFYJPQdsej917/+dfaT6Rs8C2myIJ5R00ajkd2pPwo3jF6iZ6QTMsJf5sLJLWnw+JMm/MAyww3rRwmXaSFqEkaC9PxwsojXMRzSBaGx1AuiUlNTcSCO5NMDHvCAdK973StbcqxHZfnY0NBQnrQM4WJJkj6ImPipCS1/dBSipSl3reI/GcgPHZVXKi/ufjqi6jJlhObSSu+6fkHWDpWFCa4sSWKJEfPAmLIhkuDIsiPIiakX9Aux5pJ5YPQlMbWCfiX0jHSyOoD1mjQ3mV/2q1/9KldilkhBWKwJZSSUOW/M9md96OjoaHaDn4B5alT+RkEQX/3qV/PEXea2nXLKKZlUIkGBSCoA0oRE6L+CREmnlnuRdhFCJI2YN/FetJwgV4gJixViE4mKcHCHm29/+9vpmc98Zh4kIS9xw32sOCYiEy9GhJlvx3w/PhBMgdHuIiISkXEnhNateHmQ3x6Ozl38+emAqsuMJTQqjc6Z/8VicybEsph8n332yU02VVQq1Y9//OPshs5uZvEvXLgwT6bFLURGRzgEQoWlz4gF6pDXXnvtlSfLsmSJeWoQAMRFRccSgxiZs4bFA5GxGoCm2W677ZYXujMdhHWhkADPETbxdQtNzVn8l4VJ/LHU8ANylTsqKMdWeVxGaBxZyA+hkV7IKDa5caMmJVYi6YXMFJeyeJJHF154YfbrO9/5TiZs4sxHgo+Hk6XiVCaehk4QxYlM3QgiM3/Wn3fdIKLqMmMJDaiSYhVgIdAnhHVF8w4rTW4AZELzCTfPe97z8jpOACFhefEMFhc7bjCbn10xIB5WErz85S/Pi81pilJBIT5WG2BxsQIB91grkB7NWCo6zTZWFOD3K17xiuwGwmPJFEujnNBEJsQZoWKKDOi8x9rTzhyx4sbrmDdlhAZIA6QLsdGnqL7BaFXpCPRB4Fzxky4SJSB+WLo0R7HaGCWF1Gnuk2YIjiZ0DCvGO6ZlMsBPvXPirSknNI09r5rBy9igoeqywwhtqhELKNccsTogFlU8uaGg0xyl+UhTiZE8VgRQ+einwmqjPwlCo+nI0qkXvOAFWY8FR4WkmUozk346mpm4of+NJitLoCAJljhhTdH0IgyewTKE6FghQJisE8XqkaWjiq00KL460syEUGgiYgXS/JQ1FYnKK2OspHJHfxfpZVsk0sniejVjYzyiH57v8hP/dK04cC1rTH2BTAOB4MgXwuODQjoYUeUj9Ne//nXCIpVfikt8xzG9uhf7FglPHwDSRLhsOsCqDixzLHKeFzl7v6QsUKVZYXj6dzSqLn0htG7FX8L2AAWUigHJUFC5FysbzSD2SKOzHgLCMmPHDfq3WBVA85P+N5qPWHJMV6D5CSlBAI1GI+tpylJBIDLWaWKl0WRFT3OL9aBYdRAieq3ZpA+NcNnaiD40WSmyKspA/FW5sTZEahAFTT2sINJbRmjRD+UBlixbJkHK2sVXZCJC6gXx3ROu3oMIg3eEtcTmmVidNO3Zqom+PPIfksXK0yBLGaGRd8SdjQBo8nMNeWlpG5Y2pM99mvnkD/2i9HNqaRxdApDeLbfckjco4Bn1E0ZC8/QNAqoulSE0CmC0NnRPlZWKREGmktG5TWXAatJUBO5T2LnXKMiJykUBlwWBn1QA/KHSQXb4gR4/sDaoNIDKBmEyEEGc0NPkgtz0/wHFsxWhAc3kxx2EhP8QAU25Jz3pSflalos/63kAUUC2+EM6aRK6ZdIL4ruPxKDwY/8gaeKcvCGvSQdkf+SRR2bSpnnqhAYhsakAzXysbfa+Y0oNfXgve9nLchcCOixBnqfvk52G+XBhmWMd8oHinWEx4harm48Sz/BumuXjoKDqUhlCU6XROcdYmYCsHVkLNMHUR6TmCpVMX2pVdhGPOpn1vCoo5xAclYRmK81UQEUVIanpqLCiv56WCNwiiid9gzRt73Of++RpFVRwiKqZPzEPIHKsT4iBeWVYa2p2+XOTQXz3kdCIG+GImAVZcJr3RzogIvr36GtzQsOKgsTe+ta35pFmLGc+JEwUZrcVzrG2OKcvc4899sgDG+yYQp7R78lHBYvubW97Wx740TbpDCjxfL/yYqpQdakMoalyUOlVuZ3QVKFEXOpH0T8FdF/uIBP8kUUVKyR+R4uQCsifp+iLw3qiCQVx4EYWnsJzvzwtEdGawx+sPwY1dtpppzz5lYqIZdHMn5gHNFOxUERomofWr0oc372ISIRGGHo3uo73RHikFwuS+05o5CXTaSAnmvxYqhAUhIa1hQWNxQdZ0V+JOwiNgRgGdnDD9B76OBn0YVNQpqfQzQBJQoL9youpQtWlL4TmmVqWsa30rpsKxApUBq9Iuo6I5Femcz9j2LihEmq5lIjMK2YrtEoTfkCaWFgPetCD0t3vfvd0t7vdLT3ykY/MFTGShuKjtHDNfTrGGbyANPSHKlmbuFccpuqdeXq7BXlK/xtWFX2i9FcyikwTFWsMogIQGoStjTe1hx0j4LjFymUFBJYcfjHPECsNy22qCa1dvXBpp6+a1IS2FZ24j/pIbpEYytxz3or4OkWrOIqs6P+BmGhqUimf8IQnTMwnwx1WDtbJ8PBw7uMTUQEITM0qpm9MN0KD0CEwmvX0uc2aNSsvTaN/7DnPeU62OPnPA4M3NF0hMAYGGBTAsoW8sNLoHoDkmE6DlUfTm/xkMKEmtMGWyhBap+LPNfPDK5Pr47Wfi9TiPX/exeNS5p57Ih6sFSotTVuaVdyn6QyJUbE10XV0dDTHB6I77rjjsnXCNX1N25vQQDfi7wCLF8sSi4oBDciI9EFU73znO3P6sLS4R38hU0Ow2NBr12GIkDzimj44/BkaGsr30CsPdOw3orjO9WVuqi41oW0V3FBI3eqK1lc3fka9Pweiv52IP+/hc61+QjVvgQYYOIfkmPeGNULzidE//cmKaywRLQnTROTpRGgauFFfJwRE2pm+wpQYrnFDPuAegidMdQVwrj5JvR+uNRAUy4HC9Pj3iiiuc32Zm6pLXwhtKqTdi3J9FVGWH07KVG4R0mhhmQwV1gZzr6ikNE+x1LBSmG/FKKz69rDQmOSrAQsPexDhHyHSTn4wKoqVqmshuhNhOZw0PcxBQ9WlJrRpjLL8cEJTpaTSQlqsiICgNFrLPC36mLDUmEDMfZ5hEirNM00n8bAHEcoH0isrVUfua8RWQCfCj9ZdhOelhzloqLrUhDaNUZYfkdDiOTPjaUIy4kkFprJqtBVCGyosN9xAaDzHMjFm6U8nQgNKr8hIcefo5CRSawV37+ENGqouNaFNY5TlhxOa+pNoVjI1gZE67sk6QWSVqVkly42VDJpa4mEPKmKz0JuKzZqMUe9wt4OOqstAEJq/lLIX4/pO0Ovz/YSL692N61zvbqh8CEdISH1fACuLeVmM2mnnWxGaEwD3OR8eHp74f6mH4WHXGBxUXWpC205wcb27cZ3ry9xAOFhTccIu5+wowYx3RjDVhGxGaGpWQX7svCGCk75Z2DUGA1WXmtC2E1xc725c5/oyN97UBEwcZS5Vo9GYIDI1MZ3Q9CznTOnQwnbpa0IbfFRdakLbTnBxvbtxnevL3IhwGLGjz4yNJpmWwRwzmpoaycOtRjmd0HQOmTHqGe/VhDb4qLpsN0JrlfGuqzIiwehao3HxviwsncvqYj839g9jAICmJiOX6tQv81v+xkEBQHOTgYE42sf9ZvPS1MzVCKrONZFVAxFA8ZAVGUmzRm+outSENmBQZUeo7OrghxS0sSFHgNXFqCULrdnckZn+7AxBM5N1jdrIEFJhhwr84Miz3Nc9+tbwS/8mBcxX0z8SmN6BG/zDL9xyzQRdSJMdZwmTNaQ8oyNYsmRJXjDOygOWJWE58qziAemRZrcWa0wOVZea0AYMkdCo+FhcrCNkGxwIgZ1XOXKPI2TCfDEWYbMmkYXnbIHDPDK2yuEaP5h/Njo6momFjSr1Oz7+i4CbRqMxoSMM1nuytTjhMtOeibY8z7KpoaGhvJMvmy1CokzA1e6y7FbBzrysOmDaB0f0PMPCcXbzYBUCYbCJpJZa1WTWH1RdSgnNM8nh4nq58XvNoMLcqmBHN64rczcVUPw8vu3CbKd3v4CalDTR9GclLY7W1AusK44stMbikSWHRYU7rCmeidtHc60mYVynKAuQ+xyZ5kE/GmFpAi6gOUtzlDC5jyWI/5zjD2lR85dnOSos3AL132mfudik9Xyp0R2qLm0JzSuwZ2AzRH94rpn/ESrYHF3wI/a3uCicGMd+itIQ00ZcpCsLL8bJxdMudwJ+O1q5Uf9URCt9mX/q30LHnv40FdUkJI7sHcYSKREg7lv1g5X573Hw9LkfNbpD1aUlocWK4xknnd+PGRvduv9e2LlHIS9zj3BP/SxleiQ+rzj0SxRmTLPypVl4MZ0unl+eH17ZywjI9a1QRiZl/unIz14gNK6xojgef/zxeQ9+9JBat4TmcXLgxv2o0R2qLk0JTQVQFSAWzFgxdK8sY3XeScGWX7Fw+zOadqAK5tBzqmCu7wX4h4hU1awqSx+I95vFpSzPJGVuXdxNO7QKD4mkgiXGluFc0zSkH27vvfeeGFjwd+t+l/nv8SmD+1GjO1RdWhKavsAaguda/SG6bvZllT/yK8LJDP/o4GYUDfdOoIBKRce21iK6Hn8ajUbubHZdv0DcCIc+IzrJtYeWu5Nbjs0IWm48z+I7cLi00ruuLGwX6RA69JWXvA8ITtYZ9/TRiOnzMNuJu6/RO6ouTQkNUFAhrngUyalDmVEvbRjINc+pcMu9E1i8h1ueZTSM3VKxALjnz7D7KqNnTBWQdajmjgiQUT6aSl7Z+gXFC2uFUT1GE3Xf0xnJXtD9SCqDBsWNjSAZ9VQ62O2VDn3yVu/In63RO8rqYTeoujQltNhso4nBvCUsEkbAKNgUav4o/sIXvjD/y5HmiTJVFRdRBREJCbhTpcA/CI2/8kTyiOB/l0wLgNgiOUTiYC4Uvy/zZ/sB4ql4Q7xDQ0Pb/EqtLM5Ko8dV+eKFcRCguEPYTNfgQ8Zfo77//e9PrANt1mdWo3dEcV0nqLqUEhoiCwirq1E05ZhzxP70EA9zjWhy8cfvpzzlKfmv32weGK0PhEKv5mqEmqw6MgUAiwDrS5UGXQQ67QcvvSadqm+NiZws9yl7vh8gLPxm7hYVXD8FLgtPaVUcZUlGYvPCOAgQATM9gw8M8eanIVjHirvc+LM1eoN/ECfz0ev1+ekupYRGwiiwalpiiey11175zzm77LJL3hCQe42C6D7+8Y9nQmOCp56RFQI50WxhFjv/RoxgjhN7vXNksuW+++6bJ3KyZQ33Ic8I+nCIA254nnv4Czjnxxhz5sxJs2bNynrd7yeIK35DmuxRjzXI9Iay8HDLPaUFIoa4lbeTKWzbAyIrJtbyEeEeE2/pU+Pdci1S82dr9AYno8nkca/PT3cpJTSEzFDzgiNLWB772Meml73sZbnJRaHG8oDM+C0YFppG/ngWoSOfmec8y7pAmoSAc+4JWFZUevrA6I+j81luBdywAwTb2nAdnxf4iw8LqjlX357g/nUL4qR4DQ8P57CIL2kBHoauWQYEGbA/P0cGPzSHSx8A5bMKVWxGq5B5wfPC57rJIFaEuXPn5j5C4kV+ku9Rr/hxFEgHcdfPSbxy9RuEx1Hhcx4tYK5lVeua9CivZVmjw9pW60DpkC6+K7Vc4hF3/jNq+c9RbtX3KP/kjucVrxg2R8Vd1zEegvxBp00ICIf3oPux1YBOaaM7Sc/hL7pYJqabtCQ0vRwsC/rJ+JM0f+WmOUJm8YI+9alPpc997nN50qUyWpnoBVAvwO8DFUo965Ut6ssQ/XC//SVNBtEfhRWvy8LQPQoPFhokRz8g6yTpCyRvcaPCDORv9B9xv3Vf4rrJIOaXCI1zyJhlSlGvvNY7JY0M7kDylIVm77mfUIVXvsX4xGuvxHoGHeUYC5ufEmNRx2dFJtHfSDoiMPyF8BmBV1jo5J7nRVp65xCI3Ckc9LwH3HL08ERKipviEOPHCg/y3wlRfglcM4pNNw5lkeuYtyoT001KCY2EKBPIMBYU8zNWCitkdsQRR+SRPvT825H+JDInvhRljPzRC9K5VyTceWZGKMPl3vV6XufRv2buuwHhu58R0guKswq00g1JYOkxaog1SWHiw6B4IfJD8dY7cURx3WQQ0wOhqYlMdwCVNeoVRyomAzYsh/rwhz+cHv7wh+cF8l5BpgLKI/8gKL+JG4NZpIP/bGp5F3lOK4NBLta70sqgTGOl4Z6+Q6bm4B/P0MrgD1mysCAL3OKOMPD7gx/8YG6lyFqD3GmyKy7UI/KQ969lYyoThKklaSJIwscd8cMdbggbgsJfwuc8usVvJkNTF+UP8SC9uBV5Eg/iTsvii1/8Yo5/LKuEQ7ymozQlNBUavQztyEAmca0Xx3n8GonQIgEBfRXkzgtmLIjxOlbueO6Iz7rOw2jmph1ixVd4KpTuVumXG31ROVIxKFA0s9mvjKYppr+e8TD1Thz+znpFDBdC40PGO4agPM+IK4MjBxxwQNptt93Swx72sHSve90r3eMe90gf+9jHclPbuwT6DTX1AZVc1gjxo4wRdxbP04LgT+iMxB922GHpS1/6Uo4j+c5H+lnPela20LDUcAcx01cLMZB2/sSOe+5RDxjdhwRZoI+FQ//t0572tHTIIYekRqORN9T89Kc/nT760Y8mrFsIkbji9x577JHdsb0T8YSE+LixUYDKCud04+CeuDIgQ1rodmETAsJmQI7yA2HNmjUrt5R4F4RN1wzxpE+ZPu5PfOITOe74jW7PPffM99/73vemd7zjHRN5F+se5WE6SimhISRKJq5IqOxLqALUqnI4nFyUga3Qzg93PwiI8fT4k6eyfhnwYJoEu1BoYbkKdyTNMlE4wMPvFjF+EBpWCXGiwsU0cE4ZYMCHisfUnfvc5z7pbne7W7rnPe+ZKy2VjYpPZcd6myow+AIgVzX3yC/KLlYPpEKFJx1DQ0PpIx/5SCZDRuqxqrCWISsGeqjsL33pSzMZQ2YQIJYbVs8xxxyTiY5nIQ/6UOkPhSBx/7a3vS2TFoNAb3nLW/JAiu5DNLzj17/+9Tk8/H3zm9+cm/EMpkEs+lcqcefei1/84uwXfrz73e/O1h/xfN/73pdo3ir+7Kryute9LhMrxElYDFYxuIZbngOvfe1r83MQGeRG3EnTm970pkyKyrtYjqajNCU0T1ws7GUVtFXlKIO7b4den98RUFzL8kv3IQYqHtNgmLpCwWf+lwYOcKe+H3/ew+sV0W8IjaYI03ToW4oFPqYJy5LuByrH85///HTf+943HXzwwaUVxOPfK0T2MSzipfsQBJYSk635UHAOwUBwNKPf+ta3ZoLCgsPKGx4ezqTFCL6adoz27r///tki2nXXXfP7gSQhe6wm3hP5tPvuu2eSwCKEVNR8hfwgLAiTc8iD+wceeGC2zvlYkF/kD2WBcOkDe//735+tePzhA8E/IV796lenN7zhDWm//fbLo+zvfOc7c5whOgibuMyePTvPGjjooIPS4YcfPtGSIn5s30SaacZynzTzQaJJqnwjD/W+pqM0JbQonjivCGXoRvzZMrQTd7+joTipormIEHSkMNNMYMNEbdFDwVNfSGwOCB5mr4hkoSYnFQeCdTJRwVe8qIgMfNDEomM6NmEi2fQCD19+IrqOVi1kC4mRl1R2SAwyYkNMiAySIY24oTlHBad5xgcG64n38IUvfCETDCPUWF6QIwRDsxA/sXb4GL397W/PpIKlBHGpn+5d73pXtoqY6sRaWG3zhLUE0UFQfBDwSy0irDiIByuRPIW4sLgIA8LFKqOcYKWxXx33iA/PyhqkuUm6SAvNWsLBPZYh8YTksADf8573ZJIVmem9gukopYQWE0SBUZMnosx9M72Lu+0ELq4fNMQ4UkjKRH2JkbQo2Hz9abJBDjRt4r80I1T4EA9/MohEAaFRmagUGhBwUuEZ3SM+VCig/dekK/O/HxCZKRyOsYuEvMT6oklKfCAxyAiLiIqPdYQVhBt0EBd9VnSw8w6wdHAPsWmUn+Yb1g/9alhDWEsQPn7QPKWJiMWEBTarsAQZTKPZzXxF3BI/4tJoNDJR8Vz8YEF2ENZTn/rUtM8++6RvfvOb+ci7wAqmySy/CZ/7ECbExrNYkzT1sRZxS1whUuKBxQnRkRbuQbwQLmlVNxL5qPc1HaWU0NqJV4SyxLfSu64MyliEcxe5ie5c3yz8Mr0juokvOZ63govry9zEykoBo7BSqZjqwcJ8raWk4GmzRxEb9yJBcq0wuok34FmaOFgerBDRpgEOiZ6J5BYJV279+TJEaaUr0yvv9BEG9EdhhXEPqwSyYNoMJIflAsHghkpN8w5i4x5uuWYkmj4pzSskL7C8sJiw1rQ8DAsJqwtrh75FrCSIRd0HPEO/moiWkWHIjPcrAtYHAesLawyrDiuKZ4k/cSQc/JYFj8UHEWuklLDZzZh8gNTwAzLV1AzImr5CwuVjiTXIs8qv+B7L8nzQZVKE1ol4YWulawVEX+IoZe560TvkJpKMrt1tGVxc724iEURrh683TSSaMvRn0QzRRgAiMfzCrcd1MtDzhEeFpPlIJVA4ERLOFRdVzh1NaDE+nJM/ukfF14i98g0decq58l2WkyxodCIkRNMg4nuTW1moXAvyDyLFcsJqEiFq6g7PQFBYUeQ7z2gmgeJWFi7PixQjOUZ3Oo9li2sdFX4sQ9NNSgktFo5mKCtIzfRlblzvwI0qEecu7l8Zon8uHp7DRX5K3L2jVVzKwsBNLKAAUWHji47FxLw/NlrUH53kd/yqyi+OqtwedjPIH/qGaOLQhMIKIB7uVqLneF8cCTvGR279+TJEaaUr0wPlt0hMeck90iGSi3FUHulZuSHNIodY8fWszkUikUjkn54jbughI8gH60jzxeQet1zzrtXJD/EqHJFbJFqljSNhiHhFkEpTJLP4nuQm5ofe23SUSRNaOzQraM30DjKdl6LK6KICizv3uywMFw+vDPihF6+wos7d+7PN4iJ4fFSxlGYVdEBe0DdFk4jmAiNkDP9jbSh+uNMETcVdhd7DbgaFTYc5/SwQpyqDu/W4q3J5xZBbf74MUVrpyvSCwoYMFB/ukw6uVemB0hXJT3kW0wSUr55OudMxEoben8LlPRIW71Lx8XD0rvX+5Eb+xnKh+56OSJLc97gqPMUX9zHvyvJ7OkjHhOaZp4rkhMKzXolEBPHleiGMQM/LbzT+/9++3Q336NClX0n6GId2YbRDLABYQvTDqBkRw2kGz78ynT8Tgcid0qeCSkWlE5hmIR3WxE35wT1N0uRZJ2KH0qh08Rzn9N0w4ke/jeZHtYpzWZr8envB8530cPRyFN242xj36J/7zTGSg/vH0cu9woj39Kzcexhy7/54fDzuDtd5nff7002aEppngiAS477IRgSmlwG8AsTM9xcRoefpW2CYOe45FsFXjJnddPJKH194r5A/pI3OXMKC2GJY/kwrkFfKL649j5sVopj/IhvFC6LBgmK0DquNeWyPeMQj8pwpbf2jry/PeXjyO+ab3NEhTt5yT00vzmO8agweqi4dE5oqk44yiTWvhkLvJn0ku2jJca5KFIE7gVnPzJ6nY9RNbACh0WHNMLr807PudjKI5KGRMcJUpe8kHMVHHwClX/B8LpP4nPxSXqqjmHfBSNwznvGMdL/73S/tvPPOiSkfTCaN+e/hyW/FN6ZN7zHe5xjjVWPwUHXpiNAozE5IWE70szDvhWkF2uBR5BJJJrbnWxFBJAAmNmJxQGhlz1DZIDSGnVXhVNnd7WQQKzd9VVhAIgiRiz/T7PnoVnkIPJ/LhPu41ceC8GXpYTHq/UD+//d//5d22mmnvPyIjTeZLBrfmYcnv2Pc5J/Ikuat0sF1jFeNwUPVpSmhqXBTkOkvYy4M0wWwBljqwSgNs44Zfn7lK1+ZzxmdkaUmcmFODCNlLAJmng5Hrh3Dw8PbALKcNWtWnjrgbgHzg1jky3wp/PTngT/TDViXxxF/6KdiMiNpJg26789E4E4gfswjY2Ij+UN+qhkXSU75Hs8jSYsY5UYjWTQPmXyJhfbEJz4xPeYxj0mPfvSj84JrrdPLH4rNxYdlc+HHJggMIive74aiiVkc192xIa0fKyzv29em61euSlf84Y9pEXu7XX55Wn3TzWndWBHeOuJSVJpNm9PYOvbgKuK0eX1aX2BtKqzyzeXN2hrbD1WXpoSmikNFYFIeq/LZeYBZyawRazQaeWiZOVIveclL0ite8YqJfht9zbFocKPdW+OurnQ6twITF7GK6LtiIqDr8YsJhkxu7MS/yUA7z0KqTGPgmgmNEJu7dRBngHuaq6zxY7oFs7vJP0hSFibWKPkJ4Wkdofe3RfLTEStK99kmG5JlsIB3wqRKJllqvhVkMw6hbRrbQmi824LU1q/bmDas35iuuXZ5OvnU09Je3zooHTLnuHTw0XPSkSd8O80+/oR0UHE+a/YR6dTT56XGDX9JG9YWVvc6mqMFCW5cVxDauoLQ1hVk2TuheTlspivTz0S0S28t20pTQovNJCwBtjB5whOekBcg0wSjucMIGFucYJ1RWbE8eDYOi1MxuRai9dYKmkzY7BniJDeq2P2E4k04pEuTGTXiVxanCLkHmk8E8AuLanR0NJMZAx9MwWCpEdYmo5Q0tVk7yCxvkZR24SB/9V5kPXOOJczHBsuWcJQneo/r169NG8eIexHv8bF0e0FIawvdLf/6d/ruj36S9j3kiPSdM85Kw1f9OV34hyvTZStG0uJrlqUl116fFl1TkOWV16YTT/1p2vuQw9IZZ52dNoxDquNp3Ybb0x3rbyusv/5YaF4Om+nK9DMR7dJby7bSlNBUMbdUhvXZOnnc4x6Xt1fhy08Fg8xe/vKX52aVVvAzSCAi43lVQm8uqW+pGfBLpMC56/Fbc3pEMv1EJNJ4XxaSuy+D0sBRBVA6XeMXeQn4SJCPDIhAYoyuku+QHM1r1vVhJbMnFqsGtA8YzUos1Yc85CHpwQ9+cN6ni+10CIf453CKtGzeUFhVYxDaeLptw1i6dmQ0fauwvk487fT0q0uvSEtW3pAWr1idrrjxlnRJ46bienUavn4kzb9uZRpetiotWLY8zb/y6jS7IOD9CmIbWb26sPR4r4TRO5kBL4fNdGX6mYh26a1lW2lKaKoMVEisCfZcYjoA+yqxQRyjaFQgFtGyrQor/lnSgXWgSiQyE4npuhNE8uPc9dHPMn2viP57/DtNR3QX06M4Cx6G9HoHECJkx8eCZj3vg6Y8zXIsO8CCaAYE7nKXu+RNFunXpEmrD8wYTcQCG9YVFuOG8XTmb87NZPaT8y5I5/7xj+ni0RvSRSsb6YLlo+nCAgtW3ZAWjKzJx+FVa9LCkRvTwlWr0/zlq9L8a69L3/7ZGWn2cXPT3269tfiwFB+csTvPFVQeKJ2u6xYu8QOjfIzh6NrfV7/isz3Au/e6EM+pnwhuuW4l0V/54feRqHOJ7srOdS2J90GzvCc83mev0pTQZJlgpUBU9AUxGMD8MDrk9Tcn7tM0onLR/MFqkmUX4QloB2Wq0K2+V7j/vYbhfpXB3SvveA8qyLqnc1nSLCKH0DTK+fjHPz7309Enh9t1d6xNm8Y3pfWFZXb5lVel/Y44Mp1YNHcvWbkqXbbmxnTR9SvS/MI6m79yK4pziCzf23o+PLomnX/dioLYGpnUvnrIoemMc36dRtbcXJSTO1cmz4N4r0zK3LeSmK+qzDEf/Vzu4v1W4vGZjPteoHiq/si6575aP2pFeIuoDOhcot7v6Vx5535HkbvovszPeM/9LHs/Hk47aUposRKp+cU9DeMrUO5zLTJT/1kkM72QbuDSrb5XuLi+W7QTdx8LUSwc7k6FmdFmRjfZEmZ4eHhiz/qJwk4TePOmdEth6R1y7HHph/POTsN/ujotuHZZ0cwcTUsK62uYfrPiuKjAguJ8uLiPRbZgOeeNtGDlTZnYsOSW3HBjurhoGu916KFp7tAp6Z+3FeVi07bxloWvshTTVZZG3W+WBw6VLfVTxjBi2UPURYFOloDKcStMJj6t4O+vFdTlwjnrPumGwJBg0IfpTPhHuujTFpnpnQsiwVbhe9zL0iN3AJGfhIFObqLVTNw9D9HL6qSM8sHV8/JXz+jYjZQSGhI9VEYpQjGi0hFJT1wvcOlW3ytcXN8t2om7V+HRs2WFTR8P8p9Crj8zqaDFQje2qShABS64ZGk6+Pjj08V/vi4tXb4yXVqQ08UFgS28flVxHE2LC4tt8cqRfL6E6xWrMiC8+dffmBaN/iXNH7khLVpdNEFHRtOJZ5yZvnrQoemqwq0TGlN9mP7CVB+Vn5iu6Dbe9zxoBlVaKjoDLBo4ATHtXDNowi4WkJriEvOzGbqJTySAZvD33AqyutiUgL+tsQcb/ajs2cYAEH2sLHujT5UpUxgb6lN2got90brWPa4VN90X5BdHui9U9zVYpmsNzskPkbH4gmvixzvSkVkMzACQO9zo3yUqv/jXjZQSmmdsO0/d7WTg0q2+ilCFE7EBFWSvjOMFmd0xtiGdcMop6aQzfp77zOgTWziyxSLDMuO8GYaLZubwKvrWCkttpGiK0rdWWG5nLbo4zf7u99KPz5pXWIFbCEKVBoLVj0W88vcDCodJ3XR5UOGQSOjKJ4iVPkVZciI893MywB+RA4M0xEMj/lRSkYXeE+edlGG5hYhf85rX5P5T/GMaFZY4I+Skh2lEkABTjBigY5Qcq02DZkwj4j0w/YhBJ6y70dHR/ByDSWx4wLQf/MZiIjwIUvkI+TC3kr+74Rdh0f1EGAxIEcdGo5EHqdgvjpU1vA/tOQfpco/5mMSNjw+79DJPkj3hmC2BO7qw0OOPuq5EmLHet5Ka0KYxVKF54e0qC1MqbvnX39NR3zkpnXruBWlxYWUt3IpFW0lN12UYHikIbWQkLRjZQmgLiqbnouWjaeHV16VzlixNs+fOzYSmLzLxYTIxX2EKq770/YSsCyogZKWNCgif+5wrj1g1wUaHsiT0bK+Q//gJmWFBMWgGgUIKvBNNMcrvocU7KgPu9dMU+kRZlcMUKciAuYZY5vwMBYJ65jOfmUe4iYO22ibNDNhhxfGfAv6RwH3+DsUMBXbR5Ucv7L9GfPkhDNaflhyST0zZYqtuVgV94AMfyKQDWbGdOSRJ2rAaiRtL8Nickv8X4A8DVhAmPyhnO3f8YCtzCJIddfEDPSP5e+yxR56nqV8Cknbytya0igBRf4SsjUhy0S2Etmr1aDpozjHpnKWXbUNgkyW0Sxs3pctWFM3Sa/6cZh1+eBHuluVYEBjkwld5aGgof42pIFSYfgI/mdM3PDycLRBZH4SPpcA51iGgAmLRYN2gw7Jw/yYL4oB/DJhRWRmYYaUGGzhSWbUbirYz0rvz9+nQe4Wwn/Oc5+SBH7b51txPrCWa25ANYTMDgTwnTox6Y/FAeOy0y0AeP0QBNFWxtiA/yIj3A1HRtIUsWUZHHqEjL0VmkBd9tRBoo7DImPUAeWKp8WcqLHK2bIfcGCgkrvw3gXhCclhiAGLlAwOpQmR0TTDvEj8gS6xM8lMWYk1oFQEvWlYCX10KN9aAdNHt+MbxNLpmdTp4zpx03u//1BdCW7xydbrk+lWFlXZNOvCYY/L0DXb/oHBCZHyd2bufysM95s71E1gOHNknn/l5XAtUDComJMY18/hYvqadf/VsLyAMHQmL9EI8/J8UUuPINfvKQWq8k24ITe4hRX5yArnQlIVsmIzNcjcGCfgvAKTEX6EIh48KTTlmIDC9CssH8uCHL5AhTTp2aGEDT0iDMqP8geQgNlmg+Muv7mbNmpUtRAiPTUYhcdKOlYXVh6VHk5iw+Hkx7xxCwzKkaYvVpY8MVhkfGOJAnkH0hMNHCYLkBzGQp7Yo6wuh6esgs10vQvdkQpPoyKTRnawGf4Fe2eJ9PQdIEPfUF9JvKM7qV1H4zeJXBsxyHYknFhPXyotmUDgRKkQx32N+xGdxRzjKJ4hjl112yQWZ5WIUbO2Ikt2Pb0gjaxrp8BNPSPOKJiJNzuGVjbRotCCmUc5H70Ri22B09RZCY8rGqhvy1I7FKxpp4TXL0sXXLUv7FE2M9Ru2/JUbK0hfY0BBB3x1u4Gea/c8uhiOEOPgcWnnZyeIfuA35IIlwrSZ+9///tk6wUriPvWl2/KlpjPNQJqHNNO0lJA+NAiDwQ7CYSI1hMaR946e5iZHSJzmMGTFNR8dCBGSU7yw4Jg0T1M2/mOA/kD+lgVIB0QFSRI3LDNI9SUveUn+YFH2IUZIjnhAUCeffHLuM/vQhz6UyQxgPbIsEGLE8qO5zOAATVaeo8kOEapbgPhFbmolHRGaMhaP1aRBR4CxQ1rPlVVYvSS/jtBz8lu/cePa3fYKpY1w1F8Qw3f3ZcC94scXS/1E0rWC8lHPR53iFu8RP6D4KY4cIWT6QfjZ78Mf/vBsurOMir4XpYvlTjfcfGM69Pjj0rzFS7NFBqFBVlhonRHaaMJCE6GxsmDpspXp/N/9Pu1bhM/6UNKjcqH0AVWQbqA0C64XFIa7V7ltpp9svIToV2yePfShD81rn/nbE2Sn0UENEPA+vCyVQfHDYnruc5+byYZ+KEgJiwcLjFUlEAhNTn5kDDkQHk1LOuZZN0wTEILAHc9CiliVEBphqP+PydhYaXp3xJWPJc1HrCr+lgUZEa7SC1myHBI/iSsfU5qkEB0fV+3EEwlN/WYQHn++YrAAi4x40vdGHAlDeUt+RW5qJR0TWnxx3CPRJJYIiuW9P6cV/OUBVWbAiyGRsjLcba9QHGn3s7yIQqB7nYZHPuCeZ4krTT7uofP0lkH5K39ivsX8F0mo8DHqhCWkZU98OTHV+XM5TR1WCrDRI4WYQkd8NoytT//8761pbtEUPO38i9ICmopbyaqTJieEtrB4J8MQ2+iNBbndmM676rp00Z+uTqede372lz40paEXIhOUBzEvyvR+3Sncv26BH3pX1A3eBc0wCAArlXvoem0B8L4hNfrS+EgBRiW1awvljnP9m5M6A8HxkQVYZDyDNcd9yhAWJX1XWvfLqCVEQxh6f/iFnvJNGOggJ+KDjvv4z+CEmodYdwwG0W9HnLmPe8oo+YB/xJ1+PsomcSMuxBlyZjCFeBInfXSIT+SmVtIRoQnx5dHpS3v685//fO6P0EaLuIlWm1fcVi80VmQynn4J7VjrbnuF0kPmUwDJaMWvk/CUBp4hjpjcvCjuKY3tgFtE6dZHQ8RFYeHl6q/e9EUQV76umOuY9/RdHHXUUWmvvfbKzZx73/veebSLZgHP43fO+43j6Y6xdenUefPS0aecOkFgCworDetscZ6eUUJkRmgLG8V546ZMaEtH1hTkOD/tedAh6aKiWURYIrJW77lTuLje4eJ6d+O6XkB69dHxOoOeY7cWmspF9I/yoXLKMTbL8J9r7qsMAS1/U72U4aF3BRFi+dFtAfnInaZOyK3SSNxiPAiDewpXYSv+6JQvPC/DSOdKm4cnP/EnvrNW0pTQFAgeYw3AwlgEjUYjkwDtecxazFZMToaGYWdFsOxlKAOaVXjpgHashcmbue8FigsjPrTfVdhUONpBz+OeOBJX8gid4hvTGtPGi+SLBOHwdaLfgK+ZFqJDUIB+DrZI4j5fLvoiCAOyxxpQXuMfX8+nP/3pebSKj4vIUXGE0NYVhHbNyIo0a86cdPblV6SFK7b0iV20ks7+gqhWbSWvvH5z6/VWcM1gwMIGE2pZ11k0O69alo78zvfS3gcfmm7++z8m8kWFkmuvpO3g5bCZbjJ6d+O6XhDLRixD0qtOqNz4882gfOQdRwLQe+Woj7HKQjQodM5z+KdjLOt8kKnP1G/u40Zx1fuM6VA5ps5oEEojuIJIVG5U7hUfXYv8dJ9rlVsduR/fWSspJTRECcFTEsrIA6MX9BHQGYm5iJnKOXNksBYwL3lGbMyRZzVfJgITtBWwRhiFoRJ34r5byE/6ORhpwfTFwlJc3b0DUufIM5AJzTv6D3g2+sPXD3OfdMjS0h5pEBb5R/hYeHT2YpHRXNHUB1628lQVQS9eBZZ7PEP45Dd5r8IgjI8XfmwsiHTtbemUX5yZji6aiGcuWrxlDWdhdc0vyGp41U1F8/PmgqwKC2xFcb3yxgmw7Omikb+ki5YXBLfyhnTF6pvS6edekI4+9sR00YUL09gdRXjj2zbpvHJ2giitdJPRuxvXTRaqoKp8rSBicz+awZ+P+QtULnQuEhL8+TLEjx/HMn8ED9/hfvvzrnfgB+4UB/KgG2lKaPIYUKlo6jC3BmuMCgvr0n/GkC3zX7DW9BMRPYv5SkVmjy4sjW6AxcOwLs0rKr/rewVxolNS4dD3wT3C6iQ8nmXSKM/wLKQ0VJAExCT/yTOmDWiqAPcZeeJrSB5i+cZCoBep/OOoF+oFRjp9PfWuuBbJbVvYive49va0YeNYGr355nTo8XPToSeelC688uq0qGhysm5zwUqanWvSolGsMAhui2WWrbOVa9KF1xfN0+Wr09Li+uzFl6QDjjgmLbnkivTv/9yeNm0o4rVx28LplbMTRGmlm4ze3bhusugmzXLTTfh6xiu/ykHZeTfxiWQTSUt+Rrj/Dvd/Mojhcd2NNCU0PCJxYu+horI+9rGPTc9+9rPzMDKWB5WX5g3DxU9+8pOzdSCrTuyqjkDt+dUp1JmoY7+B9aN1YxCx7mMqA3fvwI229NE5kJ8KA6BX/0AkrVgQdI3Ine7rnPyMBSc+K4tNheBOBZEP0/9uS1hqtxcfqGUjq9Pp5/wmHXTs3HTepb9Ll7Bl0IqVBZE10qLCYltE5/+q0QksZM3nitXp0qJJeub8hWnv2UemX88fTv9by8L3Irzx/hRmL4PNdJPRuxvXTQbyR++kG3G/JgOVGaSMUNqJu2/3nLtr5Rbpxq0Ed5PJT6SU0OQhFYmvfaPRyMOrTBCkj4bh2OGi6cTQ8W677ZZnRzN3RGv2YjsZv7zyxpeg8Mqgyihy7Cf0JSIu6jOIBODuy+DxinF1QonuFFY86n58kX4vXiOxj0xHT8dEP0ShS1hQ4/RdbEh3rBtLt/7nf2ner89N3zr8yHTKz+elC6+5Ni1cviItWTUyARarc2/pypE0fOVV6bgfnZoOPGZOOn/J0vSP/96e1ucticjLO1emKiG+ox2JbiU+w7mXQRcPz+HSTt9MunEbpZTQkNiEoWnJUgU6ohnqZc4JzSWmPNB8oi+Jzm1V6Hj0ClkVtCK0ZuhWRGCAibRYyLwr3o2W/KhJmt3xYxT6ucYhP6zvsbSuILdly5en40/6bvrG4YenuWz9vWB+mle8V3D24sX5ek7RNN//iCPSt4vjtQXJ3b6+eHasIEfedeHv+KY7p6fG9kfVpZTQyBg1N+NXnmYT1hc6jQpyzf3YmRg7FUVqnvEzHSKaqSZ08p7mLTOuGbDBgmbwhiUu9D9qYCFbbps3bf05SvFOt3YNjI2xl9gdae26tenaosn5w5/+LB19wonpsMIKO2ruCenI4+emw+Ycm06fNy8tH12Z7lhfvOviGYiQPdbGNo7nrYnGCr83lcSvxvZF1aUpoanpogqpZhlHzTtRRRFxieDQVd1C6xZOgJ1CfZwsGmZCLesH7373u+fNHlmmgg7/1zPKmTZn4hkHG/ngMHrK+yqsrOK4ft36NFZYbeC2/96W/n3rfzLGx7cM0W8YX1cQ2e1p86bi2Q3FB42PFmRWYENNaAOBqktTQhNUcZDYdOKeH3Ue3ZX5WePOUP7pI8AHId5Tnmoah86x0Jgiwm/yWHJz17veNT3oQQ/KU16YHzfRz8YHpiA0yGyLpbYxYzPnBblt5rogrs1b+9k4buQ/AWzayHV+t/QPFv6MEz5x29oPmP3cXBPaAKDqUkpo3YpnalnGur5XuLje3bhuEODxi4Qm6yv2SXKtyZVMymW0eWhoKK+XY+kVa/V23nnnvAyKeWl6RqTm4fcKF9dXETs6P6ouNaHtQHj8IqGpH1KzqyElOvmxxpiAy7w35rVxzbQQpooMDw/nLWJYSaC+TD3rYfcDLq6vInZ0flRdakLbgfD4RULjGjKCqBhZhsSYBMzcP1Y3jI6ObjO3Dfe4ZTsbkVlsvnrY/YCL66uIHZ0fVZeWhNYsk9QkQuRG9zjvtHmjCqzzeGwHha/4cE99S50g9yttdd8svkpTRHTfLrz4jEPx12gw1/HI6CR/+oG8WCLFek5WF0Bamq6hJinn3BOJ6Si/5d7jUGPmoerSlNCoAOqM9kqtCqSRT7lVxUE8o/15v0fFQ6KF0grRTVkc3L1DlZ1nNFrLfcVdcfL4ydpR2jlvFmdPq+4rjGhJaYExVhfLxVgqxY4aw0Uzkvl/miaj8Jq9l1bw+NWYeai6lBIaGRO/8KpAgsiMc0QV0yt7hPsRdTyr/ciakYPD/QeQgn6s6+4dIhL1Tcnaiv6J0CAZJqvqHs8xgVXncudhKD3x3N2po5/w6chnojJb/wAWwGu/OY+bX7u/rnN9jZmJqktLQhNJORnFJo3ILR6lb4VIAhAKP0ZgtQH3FIdWwJ0Il3MqvTaW66Ty4oZ40IHOjpmQFqL0Kg24o+nHDpsQD/cgGZqATIuI7tz/GD9POxCREQcWsdO0ZME74ZGeuK2K5xnn3Yinv8bMRNWllNCQWAnjVx5QCVk0jo7F6fw8ge1+1KdTRoLuR6ycEAMVmo5urtH5i3LwrAiUcwgJMmPb4TKCcSiejBLyb0LSg4jEo5XJ9j/8noswIBl+6AD50BSMaYv+R+LiXHHmGj9YyE56aVay7TBbC7FlEOFDYnki69b0xTjLLxDF09eJvsbMQ9WllNDIGFUmKhGVj73PIB6adFhSGlHjl1RsLMj/9Gg24t4tuHYWGxYao3ds6kjYrm+GSBiEgRWFhdMuvPgshMZ2QdqgTgSCG645sleaflKLnnWTkDjN0JjW6L8ITtMmRNL8J4EthPh5BEuT+O0Y+Rat2+in/HHCrFGjDFWXUkJDVCmpkBANO2uw9xm/o2czR0iNuVD8KYYthVh6I1LQbHbOISstmhawROIfd7BU6DNiSyJIEzf+70OH/AHylz/sMMm00+c5YhlBpsQRv4gPR9Kna5rD7H8mUieezMzXzrGAia7uP2nED/ymb4xwyEP+U0izUs1cWWUi2UiONZHV6AZVl1JCixlE5WLxM/8PeNSjHpWtMUiAeVH8XYi/DekPzNorjOeoiFh2bB3NH4ggAAEiZFNF/OSc7abZ05zdW9FLF8G9CNfTBORXW2xjhB+ud7B1OO6IPwu5ueb/jvit5xUOf7th6yTpiSe/BGN5kfsb/deRP+lAiMzsh+xk+ZWthXWg93dSo0YzVF1KCQ2RdYYVQYWjj4xfpLHdNttE81OOJz3pSfmHHA984APzb7YgOvqi1P/EURs0arNDgYpNk41zrBj9QYb7WHroIvx5LL94Thj4I3/bgecIj+ewsLjHs9p2h2v5h1uu9RcdriFrbdUT0yOQHvzBb44azaTQkaeyvGLz0gun3CCuq1GjDFWXUkIjY6hMVDbIhekEu+++e14rSBOTv8NAXqwfxFp5xjOekZukzGhXxS2zNKYTPP69piE+z7kXxBo1+oGqS1NCg5hkOdAHxFY09PswksiIJP1DEBf9SlzTRxRnsfeTDHYEvKC4vlvUhFZje6Dq0pTQ4gglfT1qNom0tGia5hPuqagc1bntFXq6wQm5V1KuCa3G9kDVpSWhQWCy1IBm86u/RzpILVb8Zv1BVUZNaDW2B6ouTQnN4ZXS4e5r1Kix/VF16YrQavKqUWOwUXXpiNBEYtJx3cp9jRo1dgyqLjWh1agxg1B1KSW0bsUztSxjW+ldV2NqMN3y3KVbvbtxXSf6QYNLO33VpCa0CmG65blLt3p347pO9IMGl3b6qklNaBXCdMtzl2717sZ1negHDS7t9FWTmtAqhOmW5y7d6t2N6zrRDxpc2umrJn0htE7EM75GjRr9R9WlJrQaNWYQqi41odWoMYNQdakJrUaNGYSqS18IzTO1LGNb6V1XY2ow3fLcpVu9u3FdJ/pBg0s7fdWkJrQKYbrluUu3enfjuk70gwaXdvqqSU1oFcJ0y3OXbvXuxnWd6AcNLu30VZOa0CqE6ZbnLt3q3Y3rOtEPGlza6asmfSG0TqRVxruuRo0ak0PVpSa0GjVmEKouNaHVqDGDUHWpCa1GjRmEqktfCM0ztRP0+nyN7tEuz11cP2hwcb27cV0/9IOGqktNaBVCuzx3cf2gwcX17sZ1/dAPGqouNaFVCO3y3MX1gwYX17sb1/VDP2ioutSEViG0y3MX1w8aXFzvblzXD/2goeoyZYTm0krvuk7g4np347qZiKqlt8adUXX5fzNgngry0GbYAAAAAElFTkSuQmCC>
 
