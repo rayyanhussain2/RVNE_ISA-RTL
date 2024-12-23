@@ -2,7 +2,7 @@
 
 # **Introduction**
 
-This project implements most of RVNE Instruction Set Architecture (ISA) in verilog (RTL) as specified in the paper “Back to Homogeneous Computing: A Tightly-Coupled Neuromorphic Processor With Neuromorphic ISA” (IEEE TRANSACTIONS ON PARALLEL AND DISTRIBUTED SYSTEMS, VOL. 34, NO. 11\)
+This project implements most of RVNE Instruction Set Architecture (ISA) in Verilog (RTL) as specified in the paper “Back to Homogeneous Computing: A Tightly-Coupled Neuromorphic Processor With Neuromorphic ISA” (IEEE TRANSACTIONS ON PARALLEL AND DISTRIBUTED SYSTEMS, VOL. 34, NO. 11\)
 
 ## **Spiking Neural Networks (SNN)**
 
@@ -19,6 +19,26 @@ The following diagram illustrates all the essential actions required for a SNN.
 The following instructions were implemented:
 
 ![](.other/mdfiles/image2.png)
+
+# Usage
+Make sure iverilog, vvp, and gtkwave are installed on your system and run the following commands:
+
+```bash
+iverilog neuromorphic_tb.v neuromorphic.v -o neuromorphic
+```
+- iverilog will compile and create a simulation file "neuromorphic"
+
+```bash
+vvp neuromorphic
+```
+- This will generate "neuromorphic.vcd"
+
+- Now finally run "neuromorphic.vcd" through gtkwave to see the waveform of the simulation
+```bash
+gtkwave neuromorphic.vcd
+```
+
+
 
 # **Approach**
 
